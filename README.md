@@ -6,7 +6,7 @@
 
 - **Frontend**: React (Vite), TypeScript, Tailwind CSS, Lucide-react, Axios, React Router
 - **Backend**: Node.js (Express), TypeScript
-- **Database**: MySQL (user: root, password: 1234, database: danggeun)
+- **Database**: MySQL 
 
 ## 프로젝트 구조
 
