@@ -9,11 +9,17 @@ import {
 import { postRepository } from '../repositories/post.repository';
 import { PostStatus } from '../types';
 
-function parseImageUrls(json: string | null): string[] | null {
-  if (!json) return null;
+/** MySQL2는 JSON 컬럼을 이미 파싱된 객체/배열로 반환하므로 둘 다 처리 */
+function parseImageUrls(json: string | unknown[] | null | undefined): string[] | null {
+  if (json == null) return null;
+  if (Array.isArray(json)) {
+    const urls = json.filter((x): x is string => typeof x === 'string');
+    return urls.length > 0 ? urls : null;
+  }
+  if (typeof json !== 'string') return null;
   try {
     const arr = JSON.parse(json);
-    return Array.isArray(arr) && arr.length > 0 ? arr : null;
+    return Array.isArray(arr) && arr.length > 0 ? arr.filter((x): x is string => typeof x === 'string') : null;
   } catch {
     return null;
   }

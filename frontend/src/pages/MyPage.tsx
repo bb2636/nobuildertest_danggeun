@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { User, FileText, Heart, ChevronRight } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import ImageWithFallback from '../components/ImageWithFallback'
 
 const menuItems = [
   { to: '/profile', icon: User, label: '프로필 수정', description: '닉네임, 동네 설정' },

@@ -39,12 +39,19 @@ export const postRepository = {
       const term = `%${params.keyword.trim()}%`;
       values.push(term, term);
     }
+    if (params.userId != null) {
+      conditions.push('p.user_id = ?');
+      values.push(params.userId);
+    }
 
     const whereClause = conditions.join(' AND ');
     const countSql = `SELECT COUNT(*) AS total FROM ${TABLE} p WHERE ${whereClause}`;
     const countResult = await query<{ total: number }[]>(countSql, values);
     const total = Number(countResult[0]?.total ?? 0);
 
+    // LIMIT/OFFSET는 검증된 정수만 사용하므로 직접 삽입 (mysql2 + MySQL 8.0.22+ 바인드 버그 회피)
+    const limitNum = Number(limit) || 20;
+    const offsetNum = Number(offset) || 0;
     const listSql = `
       SELECT p.id, p.title, p.price, p.status, p.category, p.location_name, p.image_urls,
              p.created_at, p.view_count, u.nickname AS user_nickname
@@ -52,9 +59,9 @@ export const postRepository = {
       INNER JOIN users u ON p.user_id = u.id
       WHERE ${whereClause}
       ORDER BY p.created_at DESC
-      LIMIT ? OFFSET ?
+      LIMIT ${limitNum} OFFSET ${offsetNum}
     `;
-    const rows = await query<PostListRow[]>(listSql, [...values, limit, offset]);
+    const rows = await query<PostListRow[]>(listSql, values);
 
     return { rows: Array.isArray(rows) ? rows : [], total };
   },

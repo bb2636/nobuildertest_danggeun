@@ -32,6 +32,8 @@ export const communityRepository = {
     const countResult = await query<{ total: number }[]>(countSql, values);
     const total = Number(countResult[0]?.total ?? 0);
 
+    const limitNum = Number(limit) || 20;
+    const offsetNum = Number(offset) || 0;
     const listSql = `
       SELECT p.id, p.user_id, p.title, p.content, p.location_name, p.location_code,
              p.created_at, p.updated_at, u.nickname AS user_nickname,
@@ -40,9 +42,9 @@ export const communityRepository = {
       INNER JOIN users u ON p.user_id = u.id
       WHERE ${whereClause}
       ORDER BY p.created_at DESC
-      LIMIT ? OFFSET ?
+      LIMIT ${limitNum} OFFSET ${offsetNum}
     `;
-    const rows = await query<CommunityPostRow[]>(listSql, [...values, limit, offset]);
+    const rows = await query<CommunityPostRow[]>(listSql, values);
     return { rows: Array.isArray(rows) ? rows : [], total };
   },
 
@@ -113,15 +115,16 @@ export const communityRepository = {
   },
 
   async findCommentsByPostId(postId: number, limit: number): Promise<{ id: number; user_id: number; nickname: string; content: string; created_at: Date }[]> {
+    const limitNum = Math.min(100, Math.max(1, Number(limit) || 50));
     const sql = `
       SELECT c.id, c.user_id, u.nickname, c.content, c.created_at
       FROM ${COMMENTS_TABLE} c
       INNER JOIN users u ON c.user_id = u.id
       WHERE c.post_id = ?
       ORDER BY c.created_at ASC
-      LIMIT ?
+      LIMIT ${limitNum}
     `;
-    const rows = await query<{ id: number; user_id: number; nickname: string; content: string; created_at: Date }[]>(sql, [postId, limit]);
+    const rows = await query<{ id: number; user_id: number; nickname: string; content: string; created_at: Date }[]>(sql, [postId]);
     return Array.isArray(rows) ? rows : [];
   },
 

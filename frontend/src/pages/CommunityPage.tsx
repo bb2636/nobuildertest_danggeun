@@ -24,10 +24,6 @@ export default function CommunityPage() {
     locationsApi.getList().then((res) => setLocations(res.data.locations ?? [])).catch(() => {})
   }, [])
 
-  useEffect(() => {
-    fetchList()
-  }, [fetchList])
-
   const fetchList = useCallback(() => {
     setError('')
     setLoading(true)
@@ -45,6 +41,10 @@ export default function CommunityPage() {
       .catch(() => setError('동네생활 글을 불러오지 못했습니다.'))
       .finally(() => setLoading(false))
   }, [locationCode])
+
+  useEffect(() => {
+    fetchList()
+  }, [fetchList])
 
   const loadMore = useCallback(() => {
     if (loadingMore || page >= totalPages) return

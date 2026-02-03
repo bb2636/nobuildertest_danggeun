@@ -126,19 +126,19 @@ export const chatRepository = {
   },
 
   async findMessages(roomId: number, limit: number, beforeId?: number): Promise<{ id: number; userId: number; nickname: string; content: string; createdAt: Date }[]> {
+    const limitNum = Math.min(100, Math.max(1, Number(limit) || 50));
     let sql = `
       SELECT m.id, m.user_id, u.nickname, m.content, m.created_at
       FROM chat_messages m
       INNER JOIN users u ON u.id = m.user_id
       WHERE m.room_id = ?
     `;
-    const params: (number | undefined)[] = [roomId];
-    if (beforeId != null) {
+    const params: number[] = [roomId];
+    if (beforeId != null && Number.isInteger(beforeId) && beforeId >= 1) {
       sql += ` AND m.id < ?`;
       params.push(beforeId);
     }
-    sql += ` ORDER BY m.id DESC LIMIT ?`;
-    params.push(limit);
+    sql += ` ORDER BY m.id DESC LIMIT ${limitNum}`;
     const rows = await query<{ id: number; user_id: number; nickname: string; content: string; created_at: Date }[]>(sql, params);
     if (!Array.isArray(rows)) return [];
     return rows.reverse().map((row) => ({
