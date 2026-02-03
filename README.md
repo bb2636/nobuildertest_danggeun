@@ -37,17 +37,11 @@ step2/
 ## 사전 요구사항
 
 - Node.js 18+
-- MySQL 8+ (root / 1234, DB: danggeun)
+- MySQL 8+ 
 
 ## 실행 방법
 
 ### 1. 데이터베이스 설정
-
-```bash
-# MySQL에서 DB 생성 및 스키마 적용
-mysql -u root -p1234 -e "CREATE DATABASE IF NOT EXISTS danggeun CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-mysql -u root -p1234 danggeun < database/schema.sql
-```
 
 시드 사용자 비밀번호: `password123`  
 (예: test@example.com / password123)
