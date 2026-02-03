@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-point: #FF6F0F;
+  --color-point-2: #FFF6E2;
+  --color-gray-100: #212224;
+  --color-gray-10: #E8E8E8;
+  --color-gray-light: #F2F3F6;
+  --font-pretendard: 'Pretendard', system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-pretendard);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #fff;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  max-width: 430px;
+  margin: 0 auto;
+  box-shadow: 0 0 0 1px var(--color-gray-10);
+}
