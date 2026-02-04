@@ -1,40 +1,52 @@
 import { Link } from 'react-router-dom'
-import { User, FileText, Heart, ChevronRight } from 'lucide-react'
+import { User, FileText, Heart, ChevronRight, MessageSquare, MessageCircle, LogOut } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import ImageWithFallback from '../components/ImageWithFallback'
 
 const menuItems = [
   { to: '/profile', icon: User, label: '프로필 수정', description: '닉네임, 동네 설정' },
-  { to: '/posts/mine', icon: FileText, label: '내 게시글', description: '작성한 게시글 목록' },
+  { to: '/posts/mine', icon: FileText, label: '내 게시글', description: '작성한 중고거래 게시글 목록' },
+  { to: '/my/community-posts', icon: MessageSquare, label: '내 동네생활 글', description: '동네생활에 쓴 글 모아보기' },
+  { to: '/my/comments', icon: MessageCircle, label: '내 댓글 목록', description: '동네생활에 쓴 댓글 모아보기' },
   { to: '/favorites', icon: Heart, label: '찜 목록', description: '찜한 게시글' },
 ] as const
 
 export default function MyPage() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
 
   return (
     <div className="min-h-screen bg-grey-50 flex flex-col">
-      <header className="bg-white border-b border-gray-10 px-4 py-4 flex items-center gap-3">
-        {user && (
-          <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 bg-gray-10">
-            <ImageWithFallback
-              src={user.profileImageUrl}
-              alt=""
-              className="w-full h-full object-cover"
-              aspectRatio="square"
-              fallbackText=""
-            />
-          </div>
-        )}
-        <div className="min-w-0">
-          <h1 className="text-subhead text-gray-100">마이</h1>
+      <header className="bg-white border-b border-gray-10 px-4 py-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           {user && (
-            <p className="text-body-14 text-gray-60 mt-0.5 truncate">
-              {user.nickname}
-              {user.locationName && ` · ${user.locationName}`}
-            </p>
+            <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 bg-gray-10">
+              <ImageWithFallback
+                src={user.profileImageUrl}
+                alt=""
+                className="w-full h-full object-cover"
+                aspectRatio="square"
+                fallbackText=""
+              />
+            </div>
           )}
+          <div className="min-w-0">
+            <h1 className="text-subhead text-gray-100">마이</h1>
+            {user && (
+              <p className="text-body-14 text-gray-60 mt-0.5 truncate">
+                {user.nickname}
+                {user.locationName && ` · ${user.locationName}`}
+              </p>
+            )}
+          </div>
         </div>
+        <button
+          type="button"
+          onClick={logout}
+          className="flex-shrink-0 p-2 rounded-full text-gray-60 hover:bg-gray-light transition-colors"
+          aria-label="로그아웃"
+        >
+          <LogOut className="w-5 h-5" />
+        </button>
       </header>
       <main className="flex-1 px-4 py-4">
         <nav className="bg-white rounded-xl border border-gray-10 overflow-hidden">

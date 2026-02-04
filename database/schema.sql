@@ -145,19 +145,11 @@ CREATE TABLE IF NOT EXISTS `community_comments` (
 -- 시드 데이터 (개발용, 비밀번호: password123)
 -- ----------------------------------------
 -- 비밀번호는 모두 password123 (bcrypt 10 rounds)
+-- 게시글(posts, community_posts)은 시드 없음 → 수동 등록만 가능
 INSERT INTO `users` (`email`, `password`, `nickname`, `location_name`, `location_code`) VALUES
 ('test@example.com', '$2a$10$ckTIfw9SVm7KUtv.rJ/s2OGorLZKauE5xT8VimTWmuCjNgn5qjxYy', '테스트유저', '역삼동', '6035'),
 ('user2@example.com', '$2a$10$ckTIfw9SVm7KUtv.rJ/s2OGorLZKauE5xT8VimTWmuCjNgn5qjxYy', '동네이웃', '송도동', '6543'),
 ('demo@danggeun.com', '$2a$10$ckTIfw9SVm7KUtv.rJ/s2OGorLZKauE5xT8VimTWmuCjNgn5qjxYy', '당근유저', '역삼동', '6035')
 ON DUPLICATE KEY UPDATE `updated_at` = CURRENT_TIMESTAMP, `password` = VALUES(`password`);
-
-INSERT INTO `posts` (`user_id`, `title`, `content`, `price`, `status`, `category`, `location_name`, `location_code`) VALUES
-(1, '아이폰 15 프로 맥스 판매해요', '직거래 역삼동에서만 가능합니다. 케이스 증정.', 1200000, 'SALE', '디지털기기', '역삼동', '6035'),
-(1, '에어팟 프로 2세대', '거의 새거예요. 박스 케이스 있습니다.', 250000, 'SALE', '디지털기기', '역삼동', '6035'),
-(2, '무료 나눔 화분', '이사 가면서 나눔합니다. 역삼역 근처.', NULL, 'SALE', '식물', '송도동', '6543');
-
-INSERT INTO `community_posts` (`user_id`, `title`, `content`, `location_name`, `location_code`) VALUES
-(1, '역삼동 날씨 좋네요', '오늘 날씨가 너무 좋아서 인사 드려요~', '역삼동', '6035'),
-(2, '송도 맛집 추천해주세요', '이사 와서 맛집을 잘 모르겠어요. 추천 부탁드려요!', '송도동', '6543');
 
 SET FOREIGN_KEY_CHECKS = 1;

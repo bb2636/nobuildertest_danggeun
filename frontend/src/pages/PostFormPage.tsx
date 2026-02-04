@@ -167,6 +167,60 @@ export default function PostFormPage() {
       </header>
 
       <form onSubmit={handleSubmit} className="flex-1 px-4 py-4 flex flex-col gap-4">
+        {/* 이미지: 최상단 */}
+        <div>
+          <label className="block text-body-14 font-medium text-gray-100 mb-1.5">
+            이미지 (최대 {MAX_IMAGES}장)
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {imageUrls.map((url, index) => (
+              <div
+                key={`${url}-${index}`}
+                className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-20 bg-gray-light"
+              >
+                <ImageWithFallback
+                  src={url}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  aspectRatio="square"
+                  fallbackText=""
+                />
+                <button
+                  type="button"
+                  onClick={() => removeImage(index)}
+                  className="absolute top-0.5 right-0.5 p-1 rounded-full bg-black/50 text-white hover:bg-black/70"
+                  aria-label="삭제"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+            {imageUrls.length < MAX_IMAGES && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-20 flex flex-col items-center justify-center text-gray-40 hover:border-point-0 hover:text-point-0 transition-colors disabled:opacity-60"
+              >
+                <ImagePlus className="w-6 h-6" />
+                <span className="text-body-12 mt-0.5">{uploading ? '업로드 중...' : '추가'}</span>
+              </button>
+            )}
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            multiple
+            className="hidden"
+            onChange={handleImageSelect}
+          />
+          {user?.locationName && (
+            <p className="text-body-12 text-gray-60 mt-2">
+              동네: {user.locationName} (로그인 계정 기준)
+            </p>
+          )}
+        </div>
         <div>
           <label htmlFor="title" className="block text-body-14 font-medium text-gray-100 mb-1.5">
             제목 *
@@ -245,59 +299,6 @@ export default function PostFormPage() {
               </label>
             ))}
           </div>
-        </div>
-        <div>
-          <label className="block text-body-14 font-medium text-gray-100 mb-1.5">
-            이미지 (최대 {MAX_IMAGES}장)
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {imageUrls.map((url, index) => (
-              <div
-                key={`${url}-${index}`}
-                className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-20 bg-gray-light"
-              >
-                <ImageWithFallback
-                  src={url}
-                  alt=""
-                  className="w-full h-full object-cover"
-                  aspectRatio="square"
-                  fallbackText=""
-                />
-                <button
-                  type="button"
-                  onClick={() => removeImage(index)}
-                  className="absolute top-0.5 right-0.5 p-1 rounded-full bg-black/50 text-white hover:bg-black/70"
-                  aria-label="삭제"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-            {imageUrls.length < MAX_IMAGES && (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-20 flex flex-col items-center justify-center text-gray-40 hover:border-point-0 hover:text-point-0 transition-colors disabled:opacity-60"
-              >
-                <ImagePlus className="w-6 h-6" />
-                <span className="text-body-12 mt-0.5">{uploading ? '업로드 중...' : '추가'}</span>
-              </button>
-            )}
-          </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp"
-            multiple
-            className="hidden"
-            onChange={handleImageSelect}
-          />
-          {user?.locationName && (
-            <p className="text-body-12 text-gray-60 mt-2">
-              동네: {user.locationName} (로그인 계정 기준)
-            </p>
-          )}
         </div>
         {error && (
           <p className="text-body-14 text-error" role="alert">

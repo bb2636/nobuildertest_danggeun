@@ -1,13 +1,14 @@
 import { communityRepository } from '../repositories/community.repository';
 
 export const communityService = {
-  async getList(params: { locationCode?: string; page?: number; limit?: number }) {
+  async getList(params: { locationCode?: string; page?: number; limit?: number; userId?: number }) {
     const page = Math.max(1, params.page ?? 1);
     const limit = Math.min(50, Math.max(1, params.limit ?? 20));
     const { rows, total } = await communityRepository.findList({
       locationCode: params.locationCode,
       page,
       limit,
+      userId: params.userId,
     });
     const posts = (Array.isArray(rows) ? rows : []).map((row) => ({
       id: row.id,
@@ -84,6 +85,26 @@ export const communityService = {
       content: row.content,
       createdAt: new Date(row.created_at).toISOString(),
     }));
+  },
+
+  async getMyComments(userId: number, page: number, limit: number) {
+    const limitNum = Math.min(50, Math.max(1, limit || 20));
+    const offset = (Math.max(1, page) - 1) * limitNum;
+    const rows = await communityRepository.findCommentsByUserId(userId, limitNum, offset);
+    const total = await communityRepository.countCommentsByUserId(userId);
+    const totalPages = Math.ceil(total / limitNum) || 1;
+    const comments = rows.map((row) => ({
+      id: row.id,
+      postId: row.post_id,
+      postTitle: row.post_title,
+      content: row.content,
+      createdAt: new Date(row.created_at).toISOString(),
+    }));
+    return { comments, total, page: Math.max(1, page), limit: limitNum, totalPages };
+  },
+
+  async markCommunityNotificationsRead(userId: number): Promise<void> {
+    await communityRepository.markCommunityNotificationsRead(userId);
   },
 
   async createComment(postId: number, userId: number, content: string) {

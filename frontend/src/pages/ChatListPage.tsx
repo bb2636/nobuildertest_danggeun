@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { MessageCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { chatApi, type ChatRoomItem } from '../api/chat'
@@ -11,11 +12,16 @@ import EmptyState from '../components/EmptyState'
 import { formatPrice, formatRelativeTime } from '../utils/format'
 
 export default function ChatListPage() {
+  const queryClient = useQueryClient()
   const { token } = useAuth()
   const { disconnectMessage, reconnectMessage } = useSocketConnectionBanner(token)
   const [rooms, setRooms] = useState<ChatRoomItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ['notifications', 'counts'] })
+  }, [queryClient])
 
   const fetchRooms = useCallback(() => {
     setError('')
@@ -39,13 +45,14 @@ export default function ChatListPage() {
     const socket = getChatSocket(token)
     if (!socket) return
     const onChatListUpdated = () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications', 'counts'] })
       chatApi.getRoomList().then((res) => setRooms(res.data.rooms ?? [])).catch(() => setError('채팅 목록을 불러오지 못했어요.'))
     }
     socket.on('chat_list_updated', onChatListUpdated)
     return () => {
       socket.off('chat_list_updated', onChatListUpdated)
     }
-  }, [token])
+  }, [token, queryClient])
 
   return (
     <div className="min-h-screen bg-grey-50 flex flex-col">
@@ -122,11 +129,21 @@ export default function ChatListPage() {
                       </p>
                     )}
                   </div>
-                  {room.lastAt && (
-                    <span className="text-body-12 text-gray-40 flex-shrink-0">
-                      {formatRelativeTime(room.lastAt)}
-                    </span>
-                  )}
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    {room.lastAt && (
+                      <span className="text-body-12 text-gray-40">
+                        {formatRelativeTime(room.lastAt)}
+                      </span>
+                    )}
+                    {(room.unreadCount ?? 0) > 0 && (
+                      <span
+                        className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-point-0 text-white text-body-12 font-medium"
+                        aria-label={`읽지 않은 메시지 ${room.unreadCount}건`}
+                      >
+                        {room.unreadCount > 99 ? '99+' : room.unreadCount}
+                      </span>
+                    )}
+                  </div>
                 </Link>
               </li>
             ))}

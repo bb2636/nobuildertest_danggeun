@@ -12,7 +12,10 @@ import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import MyPage from './pages/MyPage'
 import MyPostsPage from './pages/MyPostsPage'
+import MyCommunityPostsPage from './pages/MyCommunityPostsPage'
+import MyCommentsPage from './pages/MyCommentsPage'
 import PostDetailPage from './pages/PostDetailPage'
+import PostChatListPage from './pages/PostChatListPage'
 import PostFormPage from './pages/PostFormPage'
 import ProfilePage from './pages/ProfilePage'
 import SignUpPage from './pages/SignUpPage'
@@ -45,10 +48,13 @@ export default function App() {
             <Route path="community/:id/edit" element={<CommunityPostFormPage />} />
             <Route path="community/:id" element={<CommunityPostDetailPage />} />
             <Route path="my" element={<MyPage />} />
+            <Route path="my/community-posts" element={<MyCommunityPostsPage />} />
+            <Route path="my/comments" element={<MyCommentsPage />} />
             <Route path="favorites" element={<FavoritesPage />} />
             <Route path="chat" element={<ChatListPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="posts/mine" element={<MyPostsPage />} />
+            <Route path="posts/:id/chats" element={<PostChatListPage />} />
           </Route>
           <Route
             path="/chat/:roomId"

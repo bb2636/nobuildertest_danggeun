@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { MessageSquare, Plus, MapPin } from 'lucide-react'
 import { locationsApi, type LocationItem } from '../api/locations'
 import { communityApi, type CommunityPostListItem } from '../api/community'
@@ -10,6 +11,7 @@ import { formatRelativeTime } from '../utils/format'
 const PAGE_SIZE = 20
 
 export default function CommunityPage() {
+  const queryClient = useQueryClient()
   const [posts, setPosts] = useState<CommunityPostListItem[]>([])
   const [locations, setLocations] = useState<LocationItem[]>([])
   const [locationCode, setLocationCode] = useState('')
@@ -19,6 +21,12 @@ export default function CommunityPage() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
   const loadMoreRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    communityApi.markNotificationsRead().then(() => {
+      queryClient.invalidateQueries({ queryKey: ['notifications', 'counts'] })
+    }).catch(() => {})
+  }, [queryClient])
 
   useEffect(() => {
     locationsApi.getList().then((res) => setLocations(res.data.locations ?? [])).catch(() => {})

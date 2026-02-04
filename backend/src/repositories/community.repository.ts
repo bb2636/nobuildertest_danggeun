@@ -17,7 +17,7 @@ interface CommunityPostRow {
 }
 
 export const communityRepository = {
-  async findList(params: { locationCode?: string; page?: number; limit?: number }): Promise<{ rows: CommunityPostRow[]; total: number }> {
+  async findList(params: { locationCode?: string; page?: number; limit?: number; userId?: number }): Promise<{ rows: CommunityPostRow[]; total: number }> {
     const page = Math.max(1, params.page ?? 1);
     const limit = Math.min(50, Math.max(1, params.limit ?? 20));
     const offset = (page - 1) * limit;
@@ -26,6 +26,10 @@ export const communityRepository = {
     if (params.locationCode && params.locationCode.trim()) {
       conditions.push('p.location_code = ?');
       values.push(params.locationCode.trim());
+    }
+    if (params.userId != null) {
+      conditions.push('p.user_id = ?');
+      values.push(params.userId);
     }
     const whereClause = conditions.join(' AND ');
     const countSql = `SELECT COUNT(*) AS total FROM ${POSTS_TABLE} p WHERE ${whereClause}`;
@@ -135,6 +139,55 @@ export const communityRepository = {
     );
     const header = result as unknown as { insertId: number };
     return header.insertId;
+  },
+
+  async findCommentsByUserId(
+    userId: number,
+    limit: number,
+    offset: number
+  ): Promise<{ id: number; post_id: number; post_title: string; content: string; created_at: Date }[]> {
+    const limitNum = Math.min(100, Math.max(1, Number(limit) || 50));
+    const offsetNum = Math.max(0, Number(offset) || 0);
+    const sql = `
+      SELECT c.id, c.post_id, p.title AS post_title, c.content, c.created_at
+      FROM ${COMMENTS_TABLE} c
+      INNER JOIN ${POSTS_TABLE} p ON p.id = c.post_id
+      WHERE c.user_id = ?
+      ORDER BY c.created_at DESC
+      LIMIT ${limitNum} OFFSET ${offsetNum}
+    `;
+    const rows = await query<{ id: number; post_id: number; post_title: string; content: string; created_at: Date }[]>(sql, [userId]);
+    return Array.isArray(rows) ? rows : [];
+  },
+
+  async countCommentsByUserId(userId: number): Promise<number> {
+    const rows = await query<{ total: number }[]>(
+      `SELECT COUNT(*) AS total FROM ${COMMENTS_TABLE} WHERE user_id = ?`,
+      [userId]
+    );
+    return Array.isArray(rows) && rows[0] ? Number(rows[0].total) : 0;
+  },
+
+  /** 내 게시글에 다른 사람이 달린 댓글 수 (알림용). 읽음 처리한 시각 이후만 카운트 */
+  async countCommentsOnMyPostsByOthers(userId: number): Promise<number> {
+    const rows = await query<{ total: number }[]>(
+      `SELECT COUNT(*) AS total FROM ${COMMENTS_TABLE} c
+       INNER JOIN ${POSTS_TABLE} p ON p.id = c.post_id
+       LEFT JOIN community_notification_read r ON r.user_id = ?
+       WHERE p.user_id = ? AND c.user_id != ?
+         AND (r.read_at IS NULL OR c.created_at > r.read_at)`,
+      [userId, userId, userId]
+    );
+    return Array.isArray(rows) && rows[0] ? Number(rows[0].total) : 0;
+  },
+
+  /** 동네생활 알림 확인 처리 (이후 댓글은 읽은 것으로 간주) */
+  async markCommunityNotificationsRead(userId: number): Promise<void> {
+    await query(
+      `INSERT INTO community_notification_read (user_id, read_at) VALUES (?, NOW())
+       ON DUPLICATE KEY UPDATE read_at = NOW()`,
+      [userId]
+    );
   },
 
   async findCommentById(commentId: number): Promise<{ id: number; user_id: number; nickname: string; content: string; created_at: Date } | null> {

@@ -1,9 +1,9 @@
-import { useEffect, useState, useRef } from 'react'
+import { type ReactNode, useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query'
-import { Carrot, MapPin, LogOut, User } from 'lucide-react'
+import { Carrot, MapPin, User } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { locationsApi, type LocationItem } from '../api/locations'
+import { locationsApi } from '../api/locations'
 import { postsApi, PostListItem } from '../api/posts'
 import ImageWithFallback from '../components/ImageWithFallback'
 import PostListSkeleton from '../components/PostListSkeleton'
@@ -25,7 +25,7 @@ const CATEGORY_OPTIONS = [
 ]
 
 export default function HomePage() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const [locationCode, setLocationCode] = useState('')
   const [category, setCategory] = useState('')
   const [keyword, setKeyword] = useState('')
@@ -100,33 +100,23 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
-        <div className="flex items-center gap-1">
-          <Link
-            to="/my"
-            className="w-9 h-9 rounded-full overflow-hidden bg-gray-10 flex items-center justify-center hover:opacity-90 transition-opacity flex-shrink-0"
-            aria-label="마이"
-          >
-            {user?.profileImageUrl ? (
-              <ImageWithFallback
-                src={user.profileImageUrl}
-                alt=""
-                className="w-full h-full object-cover"
-                aspectRatio="square"
-                fallbackText=""
-              />
-            ) : (
-              <User className="w-5 h-5 text-gray-60" />
-            )}
-          </Link>
-          <button
-            type="button"
-            onClick={logout}
-            className="p-2 rounded-full text-gray-60 hover:bg-gray-light transition-colors"
-            aria-label="로그아웃"
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
-        </div>
+        <Link
+          to="/my"
+          className="w-9 h-9 rounded-full overflow-hidden bg-gray-10 flex items-center justify-center hover:opacity-90 transition-opacity flex-shrink-0"
+          aria-label="마이"
+        >
+          {user?.profileImageUrl ? (
+            <ImageWithFallback
+              src={user.profileImageUrl}
+              alt=""
+              className="w-full h-full object-cover"
+              aspectRatio="square"
+              fallbackText=""
+            />
+          ) : (
+            <User className="w-5 h-5 text-gray-60" />
+          )}
+        </Link>
       </header>
 
       {/* 메인: 게시글 피드 */}
@@ -194,7 +184,7 @@ export default function HomePage() {
             <>
               <ul className="space-y-0 divide-y divide-gray-10 bg-white rounded-xl overflow-hidden border border-gray-10">
                 {posts.map((post) => (
-                  <PostCard key={post.id} post={post} />
+                  <PostCard key={post.id} post={post} keyword={keyword.trim() || undefined} />
                 ))}
               </ul>
               <div ref={loadMoreRef} className="py-4 flex justify-center items-center gap-2">
@@ -216,7 +206,27 @@ export default function HomePage() {
   )
 }
 
-function PostCard({ post }: { post: PostListItem }) {
+/** 검색 키워드가 있으면 해당 부분만 볼드로 표시 (여러 번 나와도 모두 강조) */
+function highlightKeyword(text: string, keyword: string | undefined): ReactNode {
+  if (!keyword || !text) return text
+  const lower = keyword.toLowerCase()
+  const parts: ReactNode[] = []
+  let remain = text
+  let keyIdx = 0
+  while (remain.length > 0) {
+    const idx = remain.toLowerCase().indexOf(lower)
+    if (idx === -1) {
+      parts.push(remain)
+      break
+    }
+    parts.push(remain.slice(0, idx))
+    parts.push(<strong key={`k-${keyIdx++}`} className="font-bold">{remain.slice(idx, idx + keyword.length)}</strong>)
+    remain = remain.slice(idx + keyword.length)
+  }
+  return <>{parts}</>
+}
+
+function PostCard({ post, keyword }: { post: PostListItem; keyword?: string }) {
   return (
     <li>
       <Link
@@ -234,7 +244,7 @@ function PostCard({ post }: { post: PostListItem }) {
       </div>
       <div className="flex-1 min-w-0">
         <h3 className="text-body-16 font-medium text-gray-100 truncate">
-          {post.title}
+          {keyword ? highlightKeyword(post.title, keyword) : post.title}
         </h3>
         <p className="text-subhead text-gray-100 mt-0.5">
           {formatPrice(post.price)}

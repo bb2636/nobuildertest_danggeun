@@ -1,13 +1,17 @@
+import { useEffect } from 'react'
 import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom'
-import { Carrot, Heart, MessageCircle, User, Plus, MessageSquare } from 'lucide-react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Carrot, MessageCircle, User, Plus, MessageSquare } from 'lucide-react'
 import ErrorBoundary from './ErrorBoundary'
+import { useAuth } from '../contexts/AuthContext'
+import { notificationsApi } from '../api/notifications'
+import { getChatSocket } from '../lib/socket'
 
 const tabs = [
   { path: '/', label: '홈', icon: Carrot },
-  { path: '/community', label: '동네생활', icon: MessageSquare },
+  { path: '/community', label: '동네생활', icon: MessageSquare, badgeKey: 'communityCommentCount' as const },
+  { path: '/chat', label: '채팅', icon: MessageCircle, badgeKey: 'chatUnreadCount' as const },
   { path: '/my', label: '마이', icon: User },
-  { path: '/favorites', label: '찜', icon: Heart },
-  { path: '/chat', label: '채팅', icon: MessageCircle },
 ] as const
 
 const NAV_HEIGHT = 64
@@ -15,7 +19,31 @@ const NAV_HEIGHT = 64
 export default function MainLayout() {
   const location = useLocation()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const { token } = useAuth()
   const isHome = location.pathname === '/'
+
+  const { data: counts } = useQuery({
+    queryKey: ['notifications', 'counts'],
+    queryFn: () => notificationsApi.getCounts().then((res) => res.data),
+    enabled: !!token,
+    refetchInterval: 10 * 1000,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
+  })
+
+  useEffect(() => {
+    if (!token) return
+    const socket = getChatSocket(token)
+    if (!socket) return
+    const onChatListUpdated = () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications', 'counts'] })
+    }
+    socket.on('chat_list_updated', onChatListUpdated)
+    return () => {
+      socket.off('chat_list_updated', onChatListUpdated)
+    }
+  }, [token, queryClient])
 
   return (
     <div className="min-h-screen flex flex-col pb-16">
@@ -40,7 +68,7 @@ export default function MainLayout() {
         style={{ height: NAV_HEIGHT }}
         aria-label="메인 메뉴"
       >
-        {tabs.map(({ path, label, icon: Icon }) => {
+        {tabs.map(({ path, label, icon: Icon, badgeKey }) => {
           const isActive =
             path === '/'
               ? location.pathname === '/'
@@ -49,21 +77,33 @@ export default function MainLayout() {
                 : path === '/community'
                   ? location.pathname === '/community' || location.pathname.startsWith('/community/')
                   : location.pathname.startsWith(path)
+          const badgeCount = badgeKey && counts ? counts[badgeKey] : 0
+          const showBadge = badgeCount > 0
           return (
             <button
               key={path}
               type="button"
               onClick={() => navigate(path)}
-              className={`flex flex-col items-center gap-0.5 py-1 px-4 rounded-lg transition-colors ${
+              className={`relative flex flex-col items-center gap-0.5 py-1 px-4 rounded-lg transition-colors ${
                 isActive ? 'text-point-0' : 'text-gray-50'
               }`}
               aria-label={label}
               aria-current={isActive ? 'page' : undefined}
             >
-              <Icon
-                className={`w-6 h-6 ${isActive ? 'text-point-0' : ''}`}
-                strokeWidth={isActive ? 2.5 : 2}
-              />
+              <span className="relative inline-block">
+                <Icon
+                  className={`w-6 h-6 ${isActive ? 'text-point-0' : ''}`}
+                  strokeWidth={isActive ? 2.5 : 2}
+                />
+                {showBadge && (
+                  <span
+                    className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-point-0 text-white text-body-12 font-medium"
+                    aria-hidden
+                  >
+                    {badgeCount > 99 ? '99+' : badgeCount}
+                  </span>
+                )}
+              </span>
               <span className="text-body-12">{label}</span>
             </button>
           )

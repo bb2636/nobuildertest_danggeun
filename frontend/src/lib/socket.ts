@@ -51,6 +51,7 @@ export type ChatMessagePayload = {
   userId: number
   nickname: string
   content: string
+  messageType?: string
   createdAt: string
 }
 

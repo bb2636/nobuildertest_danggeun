@@ -6,7 +6,9 @@ import { chatController } from '../controllers/chat.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 import { validateRequest } from '../middleware/validate.middleware';
 import {
+  createAppointmentValidator,
   getOrCreateRoomValidator,
+  postIdParamValidator,
   roomIdParamValidator,
   sendMessageValidator,
 } from '../validators/chat.validator';
@@ -19,6 +21,9 @@ router.post('/rooms', validateRequest(getOrCreateRoomValidator), (req, res) =>
   chatController.getOrCreateRoom(req, res)
 );
 router.get('/rooms', (req, res) => chatController.getRoomList(req, res));
+router.get('/posts/:postId/rooms', validateRequest(postIdParamValidator), (req, res) =>
+  chatController.getRoomsByPostId(req, res)
+);
 router.get('/rooms/:roomId', validateRequest(roomIdParamValidator), (req, res) =>
   chatController.getRoomDetail(req, res)
 );
@@ -27,6 +32,15 @@ router.get('/rooms/:roomId/messages', validateRequest(roomIdParamValidator), (re
 );
 router.post('/rooms/:roomId/messages', validateRequest(sendMessageValidator), (req, res) =>
   chatController.sendMessage(req, res)
+);
+router.post('/rooms/:roomId/read', validateRequest(roomIdParamValidator), (req, res) =>
+  chatController.markRoomRead(req, res)
+);
+router.post('/rooms/:roomId/leave', validateRequest(roomIdParamValidator), (req, res) =>
+  chatController.leaveRoom(req, res)
+);
+router.post('/rooms/:roomId/appointments', validateRequest(createAppointmentValidator), (req, res) =>
+  chatController.createAppointment(req, res)
 );
 
 export default router;

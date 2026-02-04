@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { communityController } from '../controllers/community.controller';
-import { authMiddleware } from '../middleware/auth.middleware';
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth.middleware';
 import { validateRequest } from '../middleware/validate.middleware';
 import {
   communityPostIdParamValidator,
@@ -12,7 +12,9 @@ import {
 
 const router = Router();
 
-router.get('/', validateRequest(communityListQueryValidator), (req, res) => communityController.getList(req, res));
+router.get('/', optionalAuthMiddleware, validateRequest(communityListQueryValidator), (req, res) => communityController.getList(req, res));
+router.get('/my-comments', authMiddleware, (req, res) => communityController.getMyComments(req, res));
+router.post('/notifications/read', authMiddleware, (req, res) => communityController.markNotificationsRead(req, res));
 router.get('/:id/comments', validateRequest(communityPostIdParamValidator), (req, res) => communityController.getComments(req, res));
 router.post('/:id/comments', authMiddleware, validateRequest(createCommentValidator), (req, res) => communityController.createComment(req, res));
 router.get('/:id', validateRequest(communityPostIdParamValidator), (req, res) => communityController.getDetail(req, res));

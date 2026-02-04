@@ -33,6 +33,7 @@ export function setupSocket(io: Server): void {
   io.on('connection', (socket) => {
     const userId = (socket.data as SocketData).userId;
     if (!userId) return;
+    socket.join(`${USER_PREFIX}${userId}`);
 
     socket.on('join_room', async (payload: { roomId: number }) => {
       const roomId = payload?.roomId;
@@ -63,9 +64,10 @@ export function setupSocket(io: Server): void {
       }
     });
 
-    socket.on('send_message', async (payload: { roomId: number; content: string }, callback) => {
+    socket.on('send_message', async (payload: { roomId: number; content: string; type?: string }, callback) => {
       const roomId = payload?.roomId;
       const content = typeof payload?.content === 'string' ? payload.content.trim() : '';
+      const messageType = payload?.type === 'image' ? 'image' : 'text';
       if (!Number.isInteger(roomId) || roomId < 1 || !content) {
         callback?.({ ok: false, message: 'roomId와 content가 필요합니다.' });
         return;
@@ -76,7 +78,7 @@ export function setupSocket(io: Server): void {
         return;
       }
       try {
-        const messageId = await chatRepository.createMessage(roomId, userId, content);
+        const messageId = await chatRepository.createMessage(roomId, userId, content, messageType);
         const row = await chatRepository.findMessageById(messageId);
         if (!row) {
           callback?.({ ok: false, message: '메시지 저장 후 조회 실패' });
@@ -87,6 +89,7 @@ export function setupSocket(io: Server): void {
           userId: row.userId,
           nickname: row.nickname,
           content: row.content,
+          messageType: (row as { messageType?: string }).messageType || 'text',
           createdAt: new Date(row.createdAt).toISOString(),
         };
         io.to(`${ROOM_PREFIX}${roomId}`).emit('new_message', message);

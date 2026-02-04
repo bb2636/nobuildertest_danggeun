@@ -8,11 +8,21 @@ import { logger } from '../utils/logger';
 
 export const communityController = {
   async getList(req: AuthRequest, res: Response): Promise<void> {
+    const my = req.query.my === '1' || req.query.my === 'true';
+    if (my && !req.userId) {
+      res.status(401).json({ message: '로그인이 필요합니다.' });
+      return;
+    }
     const locationCode = req.query.locationCode as string | undefined;
     const page = req.query.page ? Number(req.query.page) : undefined;
     const limit = req.query.limit ? Number(req.query.limit) : undefined;
     try {
-      const result = await communityService.getList({ locationCode, page, limit });
+      const result = await communityService.getList({
+        locationCode,
+        page,
+        limit,
+        userId: my ? req.userId : undefined,
+      });
       res.json(result);
     } catch (e) {
       const err = e as Error;
@@ -137,6 +147,40 @@ export const communityController = {
     } catch (e) {
       const err = e as Error;
       logger.error('community.getComments', err);
+      res.status(500).json({ message: getPublicMessage(err, 500) });
+    }
+  },
+
+  async getMyComments(req: AuthRequest, res: Response): Promise<void> {
+    const userId = req.userId;
+    if (!userId) {
+      res.status(401).json({ message: '로그인이 필요합니다.' });
+      return;
+    }
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
+    try {
+      const result = await communityService.getMyComments(userId, page, limit);
+      res.json(result);
+    } catch (e) {
+      const err = e as Error;
+      logger.error('community.getMyComments', err);
+      res.status(500).json({ message: getPublicMessage(err, 500) });
+    }
+  },
+
+  async markNotificationsRead(req: AuthRequest, res: Response): Promise<void> {
+    const userId = req.userId;
+    if (!userId) {
+      res.status(401).json({ message: '로그인이 필요합니다.' });
+      return;
+    }
+    try {
+      await communityService.markCommunityNotificationsRead(userId);
+      res.json({ ok: true });
+    } catch (e) {
+      const err = e as Error;
+      logger.error('community.markNotificationsRead', err);
       res.status(500).json({ message: getPublicMessage(err, 500) });
     }
   },
