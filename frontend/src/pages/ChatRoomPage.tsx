@@ -11,6 +11,7 @@ import { useSocketConnectionBanner } from '../hooks/useSocketConnectionBanner'
 import ImageWithFallback from '../components/ImageWithFallback'
 import Spinner from '../components/Spinner'
 import { formatPrice, formatMessageTime } from '../utils/format'
+import { toAbsoluteImageUrl } from '../utils/image'
 import { STATUS_LABEL } from '../constants/post'
 
 export default function ChatRoomPage() {
@@ -233,18 +234,30 @@ export default function ChatRoomPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <header className="sticky top-0 z-10 bg-white border-b border-gray-10 px-4 py-3 flex items-center gap-2">
+      <header className="sticky top-0 z-10 bg-white border-b border-gray-10 px-2 py-3 flex items-center gap-2">
         <button
           type="button"
           onClick={() => navigate('/chat')}
-          className="p-2 -ml-2 rounded-full hover:bg-gray-light"
+          className="p-2 -ml-1 rounded-full hover:bg-gray-light"
           aria-label="뒤로"
         >
           <ArrowLeft className="w-5 h-5 text-gray-100" />
         </button>
-        <h1 className="text-subhead text-gray-100 flex-1 truncate">
+        <h1 className="text-subhead text-gray-100 flex-1 truncate min-w-0">
           {roomDetail?.otherNickname ?? '채팅'}
         </h1>
+        {roomDetail && (
+          <button
+            type="button"
+            onClick={handleLeaveRoom}
+            disabled={leaveLoading}
+            className="flex-shrink-0 p-2 rounded-full text-gray-60 hover:bg-gray-10 disabled:opacity-60"
+            aria-label="채팅방 나가기"
+            title="채팅방 나가기"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
+        )}
       </header>
 
       {disconnectMessage && (
@@ -266,7 +279,7 @@ export default function ChatRoomPage() {
           >
             <div className="flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden bg-gray-light">
               <ImageWithFallback
-                src={roomDetail.postImageUrl}
+                src={toAbsoluteImageUrl(roomDetail.postImageUrl)}
                 alt=""
                 className="w-full h-full object-cover"
                 aspectRatio="square"
@@ -302,7 +315,7 @@ export default function ChatRoomPage() {
             </div>
           </Link>
           {roomDetail.isPostAuthor && (
-            <div className="px-3 pb-2">
+            <div className="px-3 pb-3">
               <button
                 type="button"
                 onClick={() => setAppointmentOpen(true)}
@@ -313,17 +326,6 @@ export default function ChatRoomPage() {
               </button>
             </div>
           )}
-          <div className="px-3 pb-3 pt-0">
-            <button
-              type="button"
-              onClick={handleLeaveRoom}
-              disabled={leaveLoading}
-              className="w-full h-10 rounded-lg border border-gray-20 text-body-14 text-gray-70 flex items-center justify-center gap-1.5 hover:bg-gray-10 disabled:opacity-60"
-            >
-              <LogOut className="w-4 h-4" />
-              {leaveLoading ? '나가는 중...' : '채팅방 나가기'}
-            </button>
-          </div>
         </div>
       )}
 
@@ -449,6 +451,7 @@ export default function ChatRoomPage() {
         {messages.map((msg) => {
           const isMe = user?.id === msg.userId
           const type = msg.messageType || 'text'
+          const isImageMessage = type === 'image' || /^https?:\/\/.+\/uploads\/.+/i.test(msg.content)
           return (
             <div
               key={msg.id}
@@ -464,12 +467,15 @@ export default function ChatRoomPage() {
                 {!isMe && (
                   <p className="text-body-12 text-gray-60 mb-0.5">{msg.nickname}</p>
                 )}
-                {type === 'image' && (
-                  <a href={msg.content} target="_blank" rel="noopener noreferrer" className="block">
-                    <img src={msg.content} alt="전송된 이미지" className="max-w-full max-h-64 rounded object-contain" />
-                  </a>
+                {isImageMessage && (
+                  <>
+                    <a href={msg.content} target="_blank" rel="noopener noreferrer" className="block">
+                      <img src={msg.content} alt="전송된 이미지" className="max-w-full max-h-64 rounded object-contain" />
+                    </a>
+                    <p className="text-body-12 mt-1 opacity-90">이미지를 보냈습니다.</p>
+                  </>
                 )}
-                {type === 'appointment' && (() => {
+                {!isImageMessage && type === 'appointment' && (() => {
                   try {
                     const { date, time, place } = JSON.parse(msg.content) as { date?: string; time?: string; place?: string }
                     return (
@@ -484,7 +490,7 @@ export default function ChatRoomPage() {
                     return <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                   }
                 })()}
-                {type !== 'image' && type !== 'appointment' && (
+                {!isImageMessage && type !== 'appointment' && (
                   <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                 )}
                 <p

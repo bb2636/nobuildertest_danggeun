@@ -10,6 +10,7 @@ import ImageWithFallback from '../components/ImageWithFallback'
 import Spinner from '../components/Spinner'
 import EmptyState from '../components/EmptyState'
 import { formatPrice, formatRelativeTime } from '../utils/format'
+import { toAbsoluteImageUrl } from '../utils/image'
 
 export default function ChatListPage() {
   const queryClient = useQueryClient()
@@ -106,7 +107,7 @@ export default function ChatListPage() {
                 >
                   <div className="flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden bg-gray-light">
                     <ImageWithFallback
-                      src={room.postImageUrl ?? null}
+                      src={toAbsoluteImageUrl(room.postImageUrl)}
                       alt=""
                       className="w-full h-full object-cover"
                       aspectRatio="square"
@@ -125,7 +126,9 @@ export default function ChatListPage() {
                     </p>
                     {room.lastMessage && (
                       <p className="text-body-12 text-gray-50 truncate mt-0.5">
-                        {room.lastMessage}
+                        {/^https?:\/\/.+\/uploads\/.+/i.test(room.lastMessage)
+                          ? '이미지를 보냈습니다.'
+                          : room.lastMessage}
                       </p>
                     )}
                   </div>
