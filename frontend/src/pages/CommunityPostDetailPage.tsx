@@ -94,17 +94,23 @@ export default function CommunityPostDetailPage() {
     setCommentInput('')
     try {
       const { data } = await communityApi.createComment(postId, content)
-      setComments((prev) => [
-        ...prev,
-        {
-          id: data.id,
-          userId: data.userId,
-          nickname: data.nickname,
-          content: data.content,
-          createdAt: data.createdAt,
-        },
-      ])
-      if (post) {
+      // 소켓 수신과 API 응답이 겹칠 수 있어 중복 추가 방지
+      let didAdd = false
+      setComments((prev) => {
+        if (prev.some((c) => c.id === data.id)) return prev
+        didAdd = true
+        return [
+          ...prev,
+          {
+            id: data.id,
+            userId: data.userId,
+            nickname: data.nickname,
+            content: data.content,
+            createdAt: data.createdAt,
+          },
+        ]
+      })
+      if (didAdd && post) {
         setPost({ ...post, commentCount: post.commentCount + 1 })
       }
     } catch (err: unknown) {
