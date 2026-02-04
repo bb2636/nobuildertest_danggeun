@@ -233,7 +233,7 @@ export default function ChatRoomPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="h-[calc(100dvh-64px)] min-h-0 bg-white flex flex-col">
       <header className="sticky top-0 z-10 bg-white border-b border-gray-10 px-2 py-3 flex items-center gap-2">
         <button
           type="button"
@@ -446,7 +446,7 @@ export default function ChatRoomPage() {
 
       <div
         ref={listRef}
-        className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-2"
+        className="flex-1 min-h-0 overflow-y-auto px-4 py-3 flex flex-col gap-2"
       >
         {messages.map((msg) => {
           const isMe = user?.id === msg.userId
@@ -507,9 +507,9 @@ export default function ChatRoomPage() {
       </div>
 
       {sendError && (
-        <p className="px-4 py-1 text-body-12 text-error">{sendError}</p>
+        <p className="flex-shrink-0 px-4 py-1 text-body-12 text-error">{sendError}</p>
       )}
-      <div className="border-t border-gray-10 p-2 flex gap-2 items-center">
+      <div className="flex-shrink-0 border-t border-gray-10 bg-white p-2 flex gap-2 items-center">
         <input
           ref={fileInputRef}
           type="file"

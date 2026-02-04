@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { MessageSquare, Plus, MapPin } from 'lucide-react'
+import { MessageSquare, MapPin } from 'lucide-react'
 import { locationsApi, type LocationItem } from '../api/locations'
 import { communityApi, type CommunityPostListItem } from '../api/community'
 import EmptyState from '../components/EmptyState'
@@ -87,15 +87,8 @@ export default function CommunityPage() {
 
   return (
     <div className="min-h-screen bg-grey-50 flex flex-col">
-      <header className="sticky top-0 z-10 bg-white border-b border-gray-10 px-4 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-10 bg-white border-b border-gray-10 px-4 py-3">
         <h1 className="text-subhead text-gray-100">동네생활</h1>
-        <Link
-          to="/community/new"
-          className="p-2 rounded-full bg-point-0 text-white hover:bg-point-0/90"
-          aria-label="글쓰기"
-        >
-          <Plus className="w-5 h-5" />
-        </Link>
       </header>
       <main className="flex-1 px-4 py-4">
         <div className="flex items-center gap-2 mb-3">

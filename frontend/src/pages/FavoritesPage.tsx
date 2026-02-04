@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Heart } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ArrowLeft, Heart } from 'lucide-react'
 import { favoritesApi } from '../api/favorites'
 import type { PostListItem } from '../api/posts'
 import ImageWithFallback from '../components/ImageWithFallback'
@@ -10,6 +10,7 @@ import { formatPrice } from '../utils/format'
 import { STATUS_LABEL } from '../constants/post'
 
 export default function FavoritesPage() {
+  const navigate = useNavigate()
   const [posts, setPosts] = useState<PostListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -33,7 +34,15 @@ export default function FavoritesPage() {
 
   return (
     <div className="min-h-screen bg-grey-50 flex flex-col">
-      <header className="sticky top-0 z-10 bg-white border-b border-gray-10 px-4 py-3">
+      <header className="sticky top-0 z-10 bg-white border-b border-gray-10 px-4 py-3 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => navigate('/my')}
+          className="p-2 -ml-2 rounded-full hover:bg-gray-light"
+          aria-label="뒤로"
+        >
+          <ArrowLeft className="w-5 h-5 text-gray-100" />
+        </button>
         <h1 className="text-subhead text-gray-100 flex items-center gap-2">
           <Heart className="w-5 h-5 fill-point-0 text-point-0" />
           찜 목록

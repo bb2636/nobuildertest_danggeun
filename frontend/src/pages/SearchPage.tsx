@@ -1,10 +1,11 @@
-import { type ReactNode, useState } from 'react'
+import { type ReactNode, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { ArrowLeft, ChevronRight, MessageSquare, Search, X } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { postsApi, PostListItem } from '../api/posts'
 import { communityApi, type CommunityPostListItem } from '../api/community'
+import { searchApi } from '../api/search'
 import ImageWithFallback from '../components/ImageWithFallback'
 import PostListSkeleton from '../components/PostListSkeleton'
 import Spinner from '../components/Spinner'
@@ -100,15 +101,40 @@ function CommunityCard({ post, keyword }: { post: CommunityPostListItem; keyword
   )
 }
 
+const SUGGESTIONS_DEBOUNCE_MS = 200
+
 export default function SearchPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [query, setQuery] = useState('')
   const [keyword, setKeyword] = useState('')
   const [view, setView] = useState<SearchView>('all')
+  const [debouncedQuery, setDebouncedQuery] = useState('')
 
   const locationLabel = user?.locationName || '동네'
   const hasSearched = keyword.length > 0
+
+  useEffect(() => {
+    const trimmed = query.trim()
+    if (!trimmed) {
+      setDebouncedQuery('')
+      return
+    }
+    const t = setTimeout(() => setDebouncedQuery(trimmed), SUGGESTIONS_DEBOUNCE_MS)
+    return () => clearTimeout(t)
+  }, [query])
+
+  const {
+    data: suggestionsData,
+    isFetching: suggestionsFetching,
+  } = useQuery({
+    queryKey: ['search', 'suggestions', debouncedQuery],
+    queryFn: () => searchApi.getSuggestions(debouncedQuery).then((r) => r.data.suggestions ?? []),
+    enabled: debouncedQuery.length >= 1,
+    staleTime: 30 * 1000,
+    retry: 1,
+  })
+  const suggestions: string[] = suggestionsData ?? []
 
   const postsQuery = useInfiniteQuery({
     queryKey: ['posts', 'search', keyword],
@@ -159,6 +185,12 @@ export default function SearchPage() {
     setView('all')
   }
 
+  const handleSuggestionClick = (suggestion: string) => {
+    setQuery(suggestion)
+    setKeyword(suggestion)
+    setView('all')
+  }
+
   const handleBack = () => {
     if (view !== 'all') {
       setView('all')
@@ -186,7 +218,7 @@ export default function SearchPage() {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             placeholder={`${locationLabel} 근처에서 검색`}
-            className="flex-1 min-w-0 bg-transparent text-body-14 text-gray-100 placeholder:text-gray-40 focus:outline-none"
+            className="flex-1 min-w-0 bg-transparent text-body-14 text-gray-100 placeholder:text-gray-40 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
             autoFocus
           />
           {query.length > 0 && (
@@ -194,25 +226,46 @@ export default function SearchPage() {
               type="button"
               onClick={() => setQuery('')}
               className="w-6 h-6 rounded-full bg-gray-30 flex items-center justify-center text-gray-60 flex-shrink-0"
-              aria-label="지우기"
+              aria-label="입력 지우기"
             >
               <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
-        <button
-          type="button"
-          onClick={() => navigate('/', { replace: true })}
-          className="px-3 py-2 text-body-14 text-gray-70 font-medium"
-        >
-          닫기
-        </button>
       </header>
 
       <main className="flex-1 overflow-auto">
-        {!hasSearched && (
+        {!hasSearched && query.length === 0 && (
           <div className="px-4 py-8 text-center text-body-14 text-gray-50">
             검색어를 입력하고 엔터를 누르거나 검색해보세요.
+          </div>
+        )}
+
+        {!hasSearched && query.length > 0 && (
+          <div className="px-4 py-2 border-b border-gray-10">
+            <p className="text-body-12 text-gray-50 mb-2 flex items-center gap-1">
+              <Search className="w-3.5 h-3.5" />
+              연관 검색어
+            </p>
+            <ul className="space-y-0">
+              {suggestions.length === 0 && (
+                <li className="py-2 text-body-14 text-gray-50">
+                  {suggestionsFetching ? '검색어를 찾는 중...' : debouncedQuery.length >= 1 ? '포함된 게시글이 없어요.' : '입력한 단어가 포함된 게시글을 찾습니다.'}
+                </li>
+              )}
+              {suggestions.map((text) => (
+                <li key={text}>
+                  <button
+                    type="button"
+                    onClick={() => handleSuggestionClick(text)}
+                    className="w-full flex items-center gap-2 py-2.5 text-left text-body-14 text-gray-100 hover:bg-gray-10 rounded-lg px-1 -mx-1"
+                  >
+                    <Search className="w-4 h-4 text-gray-40 flex-shrink-0" />
+                    <span className="truncate">{text}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 

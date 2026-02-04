@@ -54,20 +54,12 @@ export default function App() {
             <Route path="my/comments" element={<MyCommentsPage />} />
             <Route path="favorites" element={<FavoritesPage />} />
             <Route path="chat" element={<ChatListPage />} />
+            <Route path="chat/:roomId" element={<ChatRoomPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="posts/mine" element={<MyPostsPage />} />
             <Route path="posts/:id/chats" element={<PostChatListPage />} />
+            <Route path="posts/:id" element={<ErrorBoundary><PostDetailPage /></ErrorBoundary>} />
           </Route>
-          <Route
-            path="/chat/:roomId"
-            element={
-              <ErrorBoundary>
-                <ProtectedRoute>
-                  <ChatRoomPage />
-                </ProtectedRoute>
-              </ErrorBoundary>
-            }
-          />
           <Route
             path="/posts/new"
             element={
@@ -84,16 +76,6 @@ export default function App() {
               <ErrorBoundary>
                 <ProtectedRoute>
                   <PostFormPage />
-                </ProtectedRoute>
-              </ErrorBoundary>
-            }
-          />
-          <Route
-            path="/posts/:id"
-            element={
-              <ErrorBoundary>
-                <ProtectedRoute>
-                  <PostDetailPage />
                 </ProtectedRoute>
               </ErrorBoundary>
             }

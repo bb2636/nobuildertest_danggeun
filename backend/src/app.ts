@@ -18,6 +18,7 @@ import postRoutes from './routes/post.routes';
 import communityRoutes from './routes/community.routes';
 import uploadRoutes from './routes/upload.routes';
 import notificationsRoutes from './routes/notifications.routes';
+import searchRoutes from './routes/search.routes';
 
 const app = express();
 
@@ -64,6 +65,7 @@ app.use('/api/posts', postRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/search', searchRoutes);
 
 app.use('/uploads', express.static(path.resolve(config.upload.dir)));
 

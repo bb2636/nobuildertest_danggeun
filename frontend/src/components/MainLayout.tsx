@@ -22,6 +22,10 @@ export default function MainLayout() {
   const queryClient = useQueryClient()
   const { token } = useAuth()
   const isHome = location.pathname === '/'
+  const isCommunity =
+    location.pathname === '/community' ||
+    (location.pathname.startsWith('/community/') &&
+      !/^\/community\/(new|\d+\/edit)$/.test(location.pathname))
 
   const { data: counts } = useQuery({
     queryKey: ['notifications', 'counts'],
@@ -52,13 +56,23 @@ export default function MainLayout() {
           <Outlet />
         </ErrorBoundary>
       </main>
-      {/* 당근마켓 스타일 글쓰기 플로팅 버튼: 홈에서만, 메뉴바 바로 위 오른쪽 */}
+      {/* 홈: 중고상품 등록 / 동네생활: 게시글 등록 - 동일 위치·크기 (메뉴바 바로 위 오른쪽) */}
       {isHome && (
         <Link
           to="/posts/new"
           className="fixed right-4 z-20 w-14 h-14 rounded-full bg-point-0 text-white flex items-center justify-center shadow-lg hover:bg-point-0/90 active:scale-95 transition-all"
           style={{ bottom: NAV_HEIGHT + 8 }}
           aria-label="글쓰기"
+        >
+          <Plus className="w-7 h-7" strokeWidth={2.5} />
+        </Link>
+      )}
+      {isCommunity && (
+        <Link
+          to="/community/new"
+          className="fixed right-4 z-20 w-14 h-14 rounded-full bg-point-0 text-white flex items-center justify-center shadow-lg hover:bg-point-0/90 active:scale-95 transition-all"
+          style={{ bottom: NAV_HEIGHT + 8 }}
+          aria-label="동네생활 글쓰기"
         >
           <Plus className="w-7 h-7" strokeWidth={2.5} />
         </Link>
