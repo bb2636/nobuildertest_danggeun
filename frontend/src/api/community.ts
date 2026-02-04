@@ -35,6 +35,7 @@ export interface CommunityListParams {
   page?: number
   limit?: number
   locationCode?: string
+  keyword?: string
   my?: boolean
 }
 

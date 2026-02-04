@@ -1,7 +1,7 @@
 import { communityRepository } from '../repositories/community.repository';
 
 export const communityService = {
-  async getList(params: { locationCode?: string; page?: number; limit?: number; userId?: number }) {
+  async getList(params: { locationCode?: string; page?: number; limit?: number; userId?: number; keyword?: string }) {
     const page = Math.max(1, params.page ?? 1);
     const limit = Math.min(50, Math.max(1, params.limit ?? 20));
     const { rows, total } = await communityRepository.findList({
@@ -9,6 +9,7 @@ export const communityService = {
       page,
       limit,
       userId: params.userId,
+      keyword: params.keyword,
     });
     const posts = (Array.isArray(rows) ? rows : []).map((row) => ({
       id: row.id,

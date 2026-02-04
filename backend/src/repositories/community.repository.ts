@@ -17,7 +17,7 @@ interface CommunityPostRow {
 }
 
 export const communityRepository = {
-  async findList(params: { locationCode?: string; page?: number; limit?: number; userId?: number }): Promise<{ rows: CommunityPostRow[]; total: number }> {
+  async findList(params: { locationCode?: string; page?: number; limit?: number; userId?: number; keyword?: string }): Promise<{ rows: CommunityPostRow[]; total: number }> {
     const page = Math.max(1, params.page ?? 1);
     const limit = Math.min(50, Math.max(1, params.limit ?? 20));
     const offset = (page - 1) * limit;
@@ -30,6 +30,11 @@ export const communityRepository = {
     if (params.userId != null) {
       conditions.push('p.user_id = ?');
       values.push(params.userId);
+    }
+    if (params.keyword && params.keyword.trim()) {
+      conditions.push('(p.title LIKE ? OR p.content LIKE ?)');
+      const term = `%${params.keyword.trim()}%`;
+      values.push(term, term);
     }
     const whereClause = conditions.join(' AND ');
     const countSql = `SELECT COUNT(*) AS total FROM ${POSTS_TABLE} p WHERE ${whereClause}`;

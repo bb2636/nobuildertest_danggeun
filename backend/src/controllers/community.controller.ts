@@ -14,11 +14,13 @@ export const communityController = {
       return;
     }
     const locationCode = req.query.locationCode as string | undefined;
+    const keyword = (req.query.keyword as string)?.trim() || undefined;
     const page = req.query.page ? Number(req.query.page) : undefined;
     const limit = req.query.limit ? Number(req.query.limit) : undefined;
     try {
       const result = await communityService.getList({
         locationCode,
+        keyword,
         page,
         limit,
         userId: my ? req.userId : undefined,

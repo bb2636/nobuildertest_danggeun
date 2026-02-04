@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, X, ImagePlus } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, X, ImagePlus } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { postsApi, CreatePostBody, PostStatus } from '../api/posts'
 import { uploadApi } from '../api/upload'
@@ -43,6 +43,8 @@ export default function PostFormPage() {
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<{ title?: string; content?: string; price?: string }>({})
+  const [exitConfirmOpen, setExitConfirmOpen] = useState(false)
 
   const { data: postData, isLoading: loading, isError: isLoadError } = useQuery({
     queryKey: ['post', postId, 'edit'],
@@ -76,18 +78,41 @@ export default function PostFormPage() {
     },
   })
 
+  const hasContent =
+    title.trim() !== '' ||
+    content.trim() !== '' ||
+    price.trim() !== '' ||
+    imageUrls.length > 0 ||
+    category !== ''
+
+  const handleBack = () => {
+    if (hasContent) {
+      setExitConfirmOpen(true)
+    } else {
+      navigate(-1)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setFieldErrors({})
     const trimmedTitle = title.trim()
-    if (!trimmedTitle) {
-      setError('제목을 입력해주세요.')
+    const errs: { title?: string; content?: string; price?: string } = {}
+    if (!trimmedTitle) errs.title = '제목을 적어주세요'
+    if (!content.trim()) errs.content = '설명을 적어주세요'
+    if (price.trim() === '' || (price.trim() !== '' && (Number.isNaN(Number(price)) || Number(price) < 0))) {
+      errs.price = '가격을 적어주세요'
+    }
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs)
       return
     }
+    const priceNum = price.trim() === '' ? null : parseInt(price, 10)
     const body: CreatePostBody = {
       title: trimmedTitle,
       content: content.trim() || null,
-      price: price === '' ? null : parseInt(price, 10) || null,
+      price: priceNum == null || Number.isNaN(priceNum) ? null : Math.max(0, priceNum),
       status,
       category: category.trim() || null,
       locationName: user?.locationName ?? null,
@@ -104,6 +129,15 @@ export default function PostFormPage() {
       })
     }
   }
+
+  const inputBase =
+    'w-full h-12 px-4 rounded-lg border text-body-16 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-0 transition-colors'
+  const inputNormal = 'border-gray-20 focus:border-2 focus:border-gray-100'
+  const inputError = 'border-2 border-error focus:border-error'
+  const textareaBase =
+    'w-full px-4 py-3 rounded-lg border text-body-16 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-0 resize-none transition-colors'
+  const textareaNormal = 'border-gray-20 focus:border-2 focus:border-gray-100'
+  const textareaError = 'border-2 border-error focus:border-error'
   const submitLoading = createMutation.isPending || updateMutation.isPending
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -155,7 +189,7 @@ export default function PostFormPage() {
       <header className="sticky top-0 z-10 bg-white border-b border-gray-10 px-4 py-3 flex items-center gap-2">
         <button
           type="button"
-          onClick={() => navigate(-1)}
+          onClick={handleBack}
           className="p-2 -ml-2 rounded-full hover:bg-gray-light transition-colors"
           aria-label="뒤로"
         >
@@ -165,6 +199,36 @@ export default function PostFormPage() {
           {isEdit ? '게시글 수정' : '글쓰기'}
         </h1>
       </header>
+
+      {/* 작성 중 나가기 확인 팝업 */}
+      {exitConfirmOpen && (
+        <div className="fixed inset-0 z-30 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-xl max-w-[320px] w-full overflow-hidden">
+            <p className="px-6 pt-6 pb-4 text-body-16 text-gray-100 text-center">
+              작성 중인 판매 글을 나갈까요?
+            </p>
+            <div className="flex flex-col border-t border-gray-10">
+              <button
+                type="button"
+                onClick={() => setExitConfirmOpen(false)}
+                className="w-full h-12 bg-point-0 text-white text-body-16 font-medium"
+              >
+                계속 작성하기
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setExitConfirmOpen(false)
+                  navigate(-1)
+                }}
+                className="w-full h-12 text-body-16 text-gray-70 border-t border-gray-10"
+              >
+                나가기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="flex-1 px-4 py-4 flex flex-col gap-4">
         {/* 이미지: 최상단 */}
@@ -229,26 +293,46 @@ export default function PostFormPage() {
             id="title"
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value)
+              if (fieldErrors.title) setFieldErrors((prev) => ({ ...prev, title: undefined }))
+            }}
             placeholder="글 제목"
             maxLength={100}
-            className="w-full h-12 px-4 rounded-lg border border-gray-20 text-body-16 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-point-0 focus:border-transparent"
+            className={`${inputBase} ${fieldErrors.title ? inputError : inputNormal}`}
             required
             aria-required="true"
+            aria-invalid={!!fieldErrors.title}
           />
+          {fieldErrors.title && (
+            <p className="mt-1.5 flex items-center gap-1 text-body-12 text-error" role="alert">
+              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+              {fieldErrors.title}
+            </p>
+          )}
         </div>
         <div>
           <label htmlFor="content" className="block text-body-14 font-medium text-gray-100 mb-1.5">
-            내용
+            자세한 설명
           </label>
           <textarea
             id="content"
             value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="자세한 내용을 입력해주세요"
+            onChange={(e) => {
+              setContent(e.target.value)
+              if (fieldErrors.content) setFieldErrors((prev) => ({ ...prev, content: undefined }))
+            }}
+            placeholder="게시글 내용을 작성해 주세요."
             rows={5}
-            className="w-full px-4 py-3 rounded-lg border border-gray-20 text-body-16 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-point-0 focus:border-transparent resize-none"
+            className={`${textareaBase} ${fieldErrors.content ? textareaError : textareaNormal}`}
+            aria-invalid={!!fieldErrors.content}
           />
+          {fieldErrors.content && (
+            <p className="mt-1.5 flex items-center gap-1 text-body-12 text-error" role="alert">
+              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+              {fieldErrors.content}
+            </p>
+          )}
         </div>
         <div>
           <label htmlFor="price" className="block text-body-14 font-medium text-gray-100 mb-1.5">
@@ -259,10 +343,20 @@ export default function PostFormPage() {
             type="number"
             min={0}
             value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            placeholder="0 또는 비우면 무료나눔"
-            className="w-full h-12 px-4 rounded-lg border border-gray-20 text-body-16 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-point-0 focus:border-transparent"
+            onChange={(e) => {
+              setPrice(e.target.value)
+              if (fieldErrors.price) setFieldErrors((prev) => ({ ...prev, price: undefined }))
+            }}
+            placeholder="₩ 가격을 입력해주세요."
+            className={`${inputBase} ${fieldErrors.price ? inputError : inputNormal}`}
+            aria-invalid={!!fieldErrors.price}
           />
+          {fieldErrors.price && (
+            <p className="mt-1.5 flex items-center gap-1 text-body-12 text-error" role="alert">
+              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+              {fieldErrors.price}
+            </p>
+          )}
         </div>
         <div>
           <label className="block text-body-14 font-medium text-gray-100 mb-1.5">
@@ -301,16 +395,17 @@ export default function PostFormPage() {
           </div>
         </div>
         {error && (
-          <p className="text-body-14 text-error" role="alert">
+          <p className="text-body-14 text-error flex items-center gap-1" role="alert">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
             {error}
           </p>
         )}
         <button
           type="submit"
-          disabled={submitLoading}
+          disabled={submitLoading || Object.keys(fieldErrors).length > 0}
           className="w-full h-12 mt-2 rounded-lg bg-point-0 text-white font-semibold text-body-16 disabled:opacity-60 disabled:cursor-not-allowed hover:bg-point-0/90 transition-colors"
         >
-          {submitLoading ? '처리 중...' : isEdit ? '수정하기' : '등록하기'}
+          {submitLoading ? '처리 중...' : isEdit ? '수정하기' : '작성 완료'}
         </button>
       </form>
     </div>

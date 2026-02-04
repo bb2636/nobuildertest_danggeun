@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useState, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query'
 import { Carrot, MapPin, User } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
@@ -25,11 +25,11 @@ const CATEGORY_OPTIONS = [
 ]
 
 export default function HomePage() {
+  const navigate = useNavigate()
   const { user } = useAuth()
   const [locationCode, setLocationCode] = useState('')
   const [category, setCategory] = useState('')
   const [keyword, setKeyword] = useState('')
-  const [searchInput, setSearchInput] = useState('')
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
   const { data: locationsData } = useQuery({
@@ -149,23 +149,14 @@ export default function HomePage() {
                 ))}
               </select>
             </div>
-            <div className="flex gap-2">
-              <input
-                type="search"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && setKeyword(searchInput.trim())}
-                placeholder="제목·내용 검색"
-                className="flex-1 h-10 px-3 rounded-lg border border-gray-20 text-body-14 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-point-0"
-              />
-              <button
-                type="button"
-                onClick={() => setKeyword(searchInput.trim())}
-                className="h-10 px-4 rounded-lg bg-point-0 text-white text-body-14 font-medium"
-              >
-                검색
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/search')}
+              className="w-full h-10 px-3 rounded-lg border border-gray-20 bg-white flex items-center gap-2 text-left"
+            >
+              <span className="text-body-14 text-gray-40 flex-1">제목·내용 검색</span>
+              <span className="text-body-14 text-point-0 font-medium">검색</span>
+            </button>
           </div>
           {loading && (
             <PostListSkeleton count={6} />

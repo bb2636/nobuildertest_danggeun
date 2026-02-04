@@ -1,99 +1,110 @@
-# 코드 전체 검토 – 부족한 부분 / 추가 권장
+# 전체 코드 점검 결과
 
-전체 코드베이스를 기준으로 **수정이 필요한 부분**, **부족한 부분**, **추가하면 좋은 부분**을 정리했습니다.
-
----
-
-## 1. 수정 필요 (버그/오류)
-
-### 1.1 이미 반영된 항목
-- **favorite.controller.ts**: `req.params.postId ?? req.params.postId` 중복 → `Number(req.params.postId)`로 통일 (수정 완료)
-
-### 1.2 확인 권장
-- **AuthContext**: 401 인터셉터에서 `localStorage.removeItem` 후 `window.location.href = '/login'`으로 이동하므로, 새로고침 시 토큰이 없어져서 괜찮음. 다만 `setToken(null)` / `setUser(null)`은 페이지 이동 전에 호출되지 않으므로, 전역 인터셉터에서 AuthContext의 logout을 호출할 수 없다는 점만 인지하면 됨.
-- **채팅 소켓**: 로그아웃 시 `disconnectChatSocket()`을 호출하지 않음. 로그아웃 시 소켓을 끊어 두면 재로그인 시 깨끗한 연결을 유지하기 좋음.
+점검 일자: 2025-02-03  
+범위: 프론트엔드(frontend/src), 백엔드(backend/src), DB 스키마
 
 ---
 
-## 2. 부족한 부분
+## 1. 린트 / 타입
 
-### 2.1 백엔드
-
-| 구분 | 내용 | 권장 조치 |
-|------|------|------------|
-| **채팅/찜 검증** | `chat.routes`, `favorite.routes`에 express-validator 미적용. `roomId`, `postId` 등은 컨트롤러에서만 검사. | `chat.validator.ts`, `favorite.validator.ts` 추가 후 `param('roomId').isInt({ min: 1 })` 등 적용. |
-| **에러 메시지 노출** | 500 시 `err.message`를 그대로 클라이언트에 반환. DB/내부 에러가 그대로 노출될 수 있음. | production에서는 `message: '서버 오류가 발생했습니다.'` 등 고정 메시지로 통일, 상세는 로그만. |
-| **요청 속도 제한** | 로그인/회원가입/API 전반에 rate limit 없음. | `express-rate-limit` 등으로 로그인·회원가입·일반 API 별 제한 적용. |
-| **CORS** | `origin: true`로 모든 origin 허용. | production에서는 허용 origin 목록으로 제한. |
-| **업로드 URL** | `API_BASE_URL`이 없으면 `http://localhost:3001` 고정. 프론트가 5173이면 이미지 URL이 3001로 나갈 수 있음. | 프론트와 동일 origin으로 서빙하거나, 프록시 사용 시 상대 경로 `/uploads/...` 반환 검토. |
-| **.env.example** | `UPLOAD_DIR`, `API_BASE_URL` 없음. | README와 동일하게 .env.example에 추가. |
-
-### 2.2 프론트엔드
-
-| 구분 | 내용 | 권장 조치 |
-|------|------|------------|
-| **에러 바운더리** | 컴포넌트/라우트 단위 에러 바운더리 없음. | 최소한 라우트 또는 App 상단에 ErrorBoundary 추가해 크래시 시 안내 화면 표시. |
-| **로딩/에러 상태** | FavoritesPage, ChatListPage 등에서 API 실패 시 빈 배열만 넣고 사용자에게 “실패” 안내 없음. | 실패 시 토스트/인라인 메시지로 “다시 시도” 안내. |
-| **로그아웃 + 소켓** | 로그아웃 시 채팅 소켓 연결 유지. | `logout` 시 `disconnectChatSocket()` 호출. |
-| **채팅 재연결** | 소켓 끊김 시 자동 재연결은 socket.io 기본 동작에 의존. | `connect_error` 등에서 토스트로 “연결이 끊겼습니다” 안내 시 UX 개선. |
-| **이미지 로드 실패** | 게시글/찜 목록에서 `img` 로드 실패 시 빈 영역 또는 깨진 아이콘만 있을 수 있음. | `onError`에서 placeholder 또는 “이미지 없음” 처리. |
-| **접근성** | 포커스 관리, 스크린 리더용 라벨은 일부만 적용. | 버튼/폼에 `aria-label`, 필수 필드에 `aria-required` 등 보강. |
-
-### 2.3 DB/스키마
-
-| 구분 | 내용 | 권장 조치 |
-|------|------|------------|
-| **인덱스** | `chat_messages(room_id, id)` 등 자주 쓰는 조합 인덱스는 있음. 채팅방 목록 쿼리에서 서브쿼리 사용. | 대량 메시지 시 `chat_messages(room_id, created_at DESC)` 복합 인덱스 검토. |
-| **마이그레이션** | schema.sql만 있고 버전별 마이그레이션 없음. | 운영 시에는 knex/typeorm 마이그레이션 등 도입 검토. |
+- **프론트엔드·백엔드**: 현재 린트 에러 없음.
+- TypeScript 타입 사용은 전반적으로 일관됨.
 
 ---
 
-## 3. 추가하면 좋은 부분 (기능/운영)
+## 2. 라우팅 및 레이아웃
 
-### 3.1 기능
-
-- **회원가입 시 동네 선택**: 스키마에 `location_name`, `location_code` 있으나 회원가입 폼에는 없음. 글쓰기에서 유저 위치 자동 사용하려면 가입/프로필에서 동네 설정 가능하게 하면 좋음.
-- **채팅 목록 실시간 갱신**: 채팅방에서 새 메시지 올 때 채팅 목록의 `lastMessage`/`lastAt`은 REST로만 갱신. 소켓으로 “채팅 목록 갱신” 이벤트를 주면 목록을 다시 fetch하거나 특정 방만 갱신 가능.
-- **게시글 검색**: 제목/내용 검색 API 및 홈에 검색창 추가.
-- **무한 스크롤 / 페이지네이션**: 게시글 목록에 “더 보기” 또는 스크롤 시 다음 페이지 로드.
-
-### 3.2 백엔드 운영/품질
-
-- **헬스체크**: `/health`에 DB ping 이미 있음. 배포 시 로드밸런서/오케스트레이션에서 사용 가능.
-- **구조화 로깅**: `logger.error`만 사용 중. 요청 ID, 사용자 ID, 응답 코드 등을 넣은 구조화 로그로 확장하면 디버깅/모니터링에 유리.
-- **테스트**: auth.service, post.service 테스트는 있음. chat.service, favorite.service, 주요 API 통합 테스트 추가 권장.
-
-### 3.3 프론트엔드 품질
-
-- **API 레이어 타입**: `CreatePostBody` 등 타입은 잘 정의됨. 에러 응답 타입을 `{ message: string }` 등으로 공통화해 인터셉터/페이지에서 일관 사용 가능.
-- **캐시/재검증**: 게시글 목록/상세는 매번 새로 불러옴. 필요 시 React Query 등으로 캐시 + 백그라운드 갱신 도입 검토.
-
-### 3.4 문서/환경
-
-- **README**: API 목록에 찜/채팅/업로드/WebSocket 설명 추가하면 좋음.
-- **.env.example**: `UPLOAD_DIR`, `API_BASE_URL` 추가.
-- **API 문서**: Swagger/OpenAPI 없음. 공개/협업 시 스펙 문서화 권장.
+- **App.tsx**: 로그인/회원가입은 공개, 나머지는 `ProtectedRoute`로 보호. `/posts/:id`, `/posts/:id/edit`, `/posts/new`, `/chat/:roomId`는 별도 `ErrorBoundary`로 감싸져 있음.
+- **MainLayout**: 하단 탭 4개(홈, 동네생활, 채팅, 마이), 알림 배지(동네생활 댓글, 채팅 미읽음), 홈에서만 글쓰기 플로팅 버튼 노출.
 
 ---
 
-## 4. 잘 되어 있는 부분
+## 3. 훅 사용 (React 규칙)
 
-- **3티어 구조**: Controller – Service – Repository 분리 유지.
-- **인증**: JWT 미들웨어, 소켓 JWT 검증 적용.
-- **권한**: 본인 글만 수정/삭제/상태 변경, 채팅방 멤버만 메시지 조회/전송.
-- **SQL**: 파라미터 바인딩 사용으로 인젝션 방지.
-- **프론트 라우팅**: `/posts/new`, `/posts/:id/edit`를 `:id`보다 먼저 배치해 충돌 방지.
-- **채팅**: WebSocket(Socket.io)으로 실시간 송수신, 방 단위 브로드캐스트.
-- **이미지**: 업로드 API + 글쓰기 폼 연동, 동네는 로그인 유저 기준 자동 설정.
-- **UI**: Figma 컬러/타이포, 모바일 퍼스트, 하단 탭 + 플로팅 글쓰기 버튼 구성.
+- **PostDetailPage**: 훅은 항상 상단에서 동일 순서로 호출됨. 게시글 없을 때도 콘텐츠 영역을 `hidden`으로만 숨기고 마운트를 유지해 `ImageGallery` 등 자식 훅 개수가 바뀌지 않도록 처리됨 → “Rendered more hooks” 이슈 방지에 적절함.
+- **CommunityPage**: `fetchList`는 `useCallback`으로 정의된 뒤 `useEffect([fetchList])`에서만 사용됨. 훅 선언 순서 문제 없음.
+- **MyPage**: `ImageWithFallback` 정상 import·사용. (과거 “ImageWithFallback is not defined”는 수정된 상태로 보임.)
 
 ---
 
-## 5. 우선 적용 추천 순서
+## 4. API·네트워크
 
-1. **즉시**: production 시 500 에러 메시지 고정, CORS origin 제한, .env.example 보완.
-2. **단기**: 채팅/찜 라우트에 param 검증(validator) 추가, 로그아웃 시 `disconnectChatSocket()` 호출, 목록 페이지 API 실패 시 사용자 안내.
-3. **중기**: Rate limit, 에러 바운더리, 이미지 onError 처리, 회원가입 동네 선택.
-4. **장기**: 채팅 목록 실시간 갱신, 검색/무한 스크롤, 테스트/로깅/API 문서 확장.
+- **client.ts**: `VITE_API_URL` 기반 baseURL, `Authorization` Bearer 토큰 주입, 401 시 로그아웃 후 `/login` 이동. 로그인/회원가입 요청은 401 시 리다이렉트 제외.
+- **프록시**: 프론트가 `localhost:5173`에서 `/api` 호출 시 500이 나온다면, Vite 프록시가 백엔드(예: 3000)로 넘기도록 `vite.config.ts` 설정 여부 확인 필요.
 
-이 문서는 `CODE_REVIEW.md`를 확장한 전체 검토 결과이며, 필요에 따라 항목별로 이슈/태스크로 쪼개어 적용하면 됩니다.
+---
+
+## 5. 검색·게시글
+
+- **SearchPage**:  
+  - 검색 시 중고거래 3개 + 동네생활 3개 미리보기, 각각 “더보기”로 전체 목록 전환.  
+  - `view`: 'all' | 'posts' | 'community' 로 상태 분리.  
+  - 키워드 하이라이트: `escapeRegex`로 특수문자 이스케이프 후 볼드 처리.  
+  - `useInfiniteQuery`로 posts/community 각각 호출, 초기 뷰에서는 `slice(0, 3)`만 사용.
+- **HomePage**: 검색창 클릭 시 `/search` 이동. 무한 스크롤·필터(동네·카테고리·키워드) 적용.
+- **PostDetailPage**: 내 게시글일 때 “판매 물품”·“대화 중인 채팅 N” 버튼·상태 변경 버튼 노출. `chatApi.getRoomsByPostId`로 해당 글 채팅방 목록 조회.
+
+---
+
+## 6. 채팅
+
+- **ChatRoomPage**:  
+  - 전송 버튼: `disabled={sending || !input.trim()}` 로 빈 내용일 때 비활성화.  
+  - 판매 상태 변경(바텀시트 + 확인 모달), 약속잡기(글 주인만), 채팅방 나가기, 이미지 전송 등 구현됨.
+- **ChatListPage**: 방별 미읽음 배지, 알림 카운트 연동 확인 필요(백엔드 `/api/notifications/counts` 등).
+
+---
+
+## 7. 게시글 작성·수정
+
+- **PostFormPage**:  
+  - 제목/설명/가격 필수 검증, `fieldErrors`로 필드별 에러 메시지·빨간 테두리·AlertTriangle 아이콘 표시.  
+  - 뒤로가기 시 내용 있으면 “작성 중인 판매 글을 나갈까요?” 팝업, 없으면 그냥 이탈.  
+  - 이미지 업로드 후 URL 배열로 저장, 수정 시 기존 이미지 유지.
+
+---
+
+## 8. 백엔드
+
+- **app.ts**: CORS, rate limit(auth 15분 30회, api 1분 120회), `/api/*` 라우트, `/uploads` 정적, `/health` DB 체크.
+- **post.controller**: getList에 keyword/locationCode/status/category 등 쿼리 지원. 500 발생 시 DB/환경(테이블 없음, 연결 실패 등) 확인 필요.
+- **community**: repository `findList`에 `keyword`(LIKE title/content) 지원. controller·service·validator에 keyword 전달됨.
+- **chat**: getRoomList, getRoomsByPostId, getRoomDetail 등. 500 시 채팅 관련 테이블/마이그레이션 적용 여부 확인 필요.
+
+---
+
+## 9. DB·마이그레이션
+
+- **schema.sql**: `users`, `posts`, `favorites`, `chat_rooms`, `chat_room_members`, `chat_messages`, `community_posts`, `community_comments` 정의. 시드 유저 3명(비밀번호 동일).
+- **마이그레이션**:  
+  - `001`: chat_messages 등 인덱스  
+  - `002`: community 테이블  
+  - `003`: 알림 읽음  
+  - `004`: 채팅 메시지 타입·약속  
+- **“Table community_posts doesn't exist”** 발생 시:  
+  - 최신 `schema.sql`로 DB 초기화를 했는지,  
+  - 또는 `002_add_community_tables.sql` 등 마이그레이션을 순서대로 적용했는지 확인 필요.
+
+---
+
+## 10. 개선 제안 (선택)
+
+| 항목 | 내용 |
+|------|------|
+| PostDetailPage | `useEffect` 의존성 `[post?.status]` → `[post]` 로 두면 post 객체가 바뀔 때마다 status 동기화되어 더 안전할 수 있음. (현재도 동작에는 문제 없음.) |
+| API 500 대응 | 백엔드 로그에 스택 트레이스가 남도록 되어 있는지 확인. 프론트에서는 500 시 “잠시 후 다시 시도해주세요” 등 공통 메시지 노출 권장. |
+| 채팅 미읽음 | 방별/전체 미읽음 카운트가 백엔드와 일치하는지, 읽음 처리 시점(방 입장·메시지 로드 후 등)이 기획과 맞는지 한 번 더 확인. |
+| 로그아웃 노출 | “로그아웃은 마이페이지에서만” 요구사항이면, MainLayout 등 다른 화면에 로그아웃 버튼이 없는지 확인됨. MyPage에만 있음. |
+
+---
+
+## 11. 요약
+
+- **전체 구조·훅 사용·라우팅·검색·채팅·폼 검증·나가기 확인** 등은 요구사항에 맞게 구현된 상태로 보임.
+- **이미 보고된 에러**  
+  - `ImageWithFallback is not defined` → MyPage에 import 있음, 해결된 상태로 판단.  
+  - `Cannot access 'fetchList' before initialization` → CommunityPage 훅 순서 정상, 해결된 상태로 판단.  
+  - `Rendered more hooks` (PostDetailPage) → 조건부 훅 제거·hidden 유지로 해결된 구조.  
+- **500 에러** (GET /api/posts, GET /api/chat/rooms 등)는 **DB 연결·테이블 존재·마이그레이션 적용**을 우선 확인하고, 백엔드 로그로 원인 확인하는 것을 권장.
+
+이 점검으로 “지금까지 작업한 전체 코드”를 한 번 훑었고, 치명적인 구조 오류나 훅 위반은 보이지 않습니다.

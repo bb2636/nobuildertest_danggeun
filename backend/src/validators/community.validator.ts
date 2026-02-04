@@ -8,6 +8,7 @@ export const communityListQueryValidator = [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 50 }),
   query('locationCode').optional().trim().isLength({ max: 20 }),
+  query('keyword').optional().trim().isLength({ max: 100 }),
   query('my').optional().isIn(['1', '0']).withMessage('my는 1 또는 0이어야 합니다.'),
 ];
 

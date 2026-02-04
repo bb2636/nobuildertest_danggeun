@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Calendar, ImagePlus, LogOut, Send } from 'lucide-react'
+import { ArrowLeft, Calendar, ChevronDown, ImagePlus, LogOut, Send } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { chatApi, type ChatMessage, type ChatRoomDetail } from '../api/chat'
 import { postsApi, type PostStatus } from '../api/posts'
@@ -33,8 +33,16 @@ export default function ChatRoomPage() {
   const [appointmentPlace, setAppointmentPlace] = useState('')
   const [appointmentSubmitting, setAppointmentSubmitting] = useState(false)
   const [imageUploading, setImageUploading] = useState(false)
+  const [statusSheetOpen, setStatusSheetOpen] = useState(false)
+  const [statusConfirmMessage, setStatusConfirmMessage] = useState<string | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const STATUS_CONFIRM_LABEL: Record<PostStatus, string> = {
+    SALE: '판매중',
+    RESERVED: '예약중',
+    SOLD: '거래 완료',
+  }
 
   const id = roomId ? parseInt(roomId, 10) : NaN
 
@@ -116,9 +124,11 @@ export default function ChatRoomPage() {
   const handleStatusChange = async (newStatus: PostStatus) => {
     if (!roomDetail || statusLoading || roomDetail.postStatus === newStatus) return
     setStatusLoading(true)
+    setStatusSheetOpen(false)
     try {
       await postsApi.updateStatus(roomDetail.postId, newStatus)
       setRoomDetail((prev) => (prev ? { ...prev, postStatus: newStatus } : null))
+      setStatusConfirmMessage(`상태가 ${STATUS_CONFIRM_LABEL[newStatus]}으로 변경됐어요`)
     } finally {
       setStatusLoading(false)
     }
@@ -264,35 +274,31 @@ export default function ChatRoomPage() {
               />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-body-14 font-medium text-gray-100 truncate">
+              {roomDetail.isPostAuthor ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setStatusSheetOpen(true)
+                  }}
+                  disabled={statusLoading}
+                  className="flex items-center gap-0.5 text-body-14 font-medium text-gray-100 hover:text-point-0"
+                >
+                  {STATUS_LABEL[roomDetail.postStatus] ?? roomDetail.postStatus}
+                  <ChevronDown className="w-4 h-4 text-gray-50" />
+                </button>
+              ) : (
+                <p className="text-body-14 font-medium text-gray-60">
+                  {STATUS_LABEL[roomDetail.postStatus] ?? roomDetail.postStatus}
+                </p>
+              )}
+              <p className="text-body-14 font-medium text-gray-100 truncate mt-0.5">
                 {roomDetail.postTitle}
               </p>
               <p className="text-body-14 text-point-0 mt-0.5">
                 {formatPrice(roomDetail.postPrice)}
               </p>
-              {roomDetail.isPostAuthor && (
-                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                  {(['SALE', 'RESERVED', 'SOLD'] as const).map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        handleStatusChange(s)
-                      }}
-                      disabled={statusLoading || roomDetail.postStatus === s}
-                      className={`px-2 py-0.5 rounded text-body-12 font-medium transition-colors ${
-                        roomDetail.postStatus === s
-                          ? 'bg-point-0 text-white'
-                          : 'bg-gray-20 text-gray-70 hover:bg-gray-30'
-                      } disabled:opacity-60`}
-                    >
-                      {STATUS_LABEL[s]}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           </Link>
           {roomDetail.isPostAuthor && (
@@ -316,6 +322,63 @@ export default function ChatRoomPage() {
             >
               <LogOut className="w-4 h-4" />
               {leaveLoading ? '나가는 중...' : '채팅방 나가기'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 판매 상태 변경 하단 액션시트 */}
+      {statusSheetOpen && roomDetail && (
+        <>
+          <div
+            className="fixed inset-0 z-30 bg-black/50"
+            onClick={() => setStatusSheetOpen(false)}
+            aria-hidden
+          />
+          <div className="fixed bottom-0 left-0 right-0 z-30 max-w-mobile mx-auto bg-white rounded-t-2xl shadow-lg pb-safe">
+            <div className="p-2 border-b border-gray-10">
+              <div className="w-8 h-1 rounded-full bg-gray-20 mx-auto" aria-hidden />
+            </div>
+            <ul className="py-2">
+              {(['SALE', 'RESERVED', 'SOLD'] as const).map((s) => (
+                <li key={s}>
+                  <button
+                    type="button"
+                    onClick={() => handleStatusChange(s)}
+                    disabled={statusLoading || roomDetail.postStatus === s}
+                    className="w-full py-3.5 px-4 text-body-16 text-gray-100 text-left hover:bg-grey-50 active:bg-gray-10 disabled:opacity-50 disabled:cursor-default"
+                  >
+                    {s === 'SOLD' ? '거래완료' : STATUS_LABEL[s]}
+                  </button>
+                </li>
+              ))}
+              <li className="border-t border-gray-10">
+                <button
+                  type="button"
+                  onClick={() => setStatusSheetOpen(false)}
+                  className="w-full py-3.5 px-4 text-body-16 text-gray-60"
+                >
+                  닫기
+                </button>
+              </li>
+            </ul>
+          </div>
+        </>
+      )}
+
+      {/* 상태 변경 확인 팝업 */}
+      {statusConfirmMessage && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-xl max-w-[280px] w-full overflow-hidden">
+            <p className="px-6 pt-6 pb-4 text-body-16 text-gray-100 text-center">
+              {statusConfirmMessage}
+            </p>
+            <button
+              type="button"
+              onClick={() => setStatusConfirmMessage(null)}
+              className="w-full h-12 bg-point-0 text-white text-body-16 font-medium"
+            >
+              확인
             </button>
           </div>
         </div>

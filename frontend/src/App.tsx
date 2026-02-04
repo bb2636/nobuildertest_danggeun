@@ -18,6 +18,7 @@ import PostDetailPage from './pages/PostDetailPage'
 import PostChatListPage from './pages/PostChatListPage'
 import PostFormPage from './pages/PostFormPage'
 import ProfilePage from './pages/ProfilePage'
+import SearchPage from './pages/SearchPage'
 import SignUpPage from './pages/SignUpPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -43,6 +44,7 @@ export default function App() {
             }
           >
             <Route index element={<HomePage />} />
+            <Route path="search" element={<SearchPage />} />
             <Route path="community" element={<CommunityPage />} />
             <Route path="community/new" element={<CommunityPostFormPage />} />
             <Route path="community/:id/edit" element={<CommunityPostFormPage />} />
