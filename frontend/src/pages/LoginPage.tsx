@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Carrot } from 'lucide-react'
+import { Carrot, AlertTriangle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getApiErrorMessage } from '../utils/apiError'
 
@@ -17,8 +17,11 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
     try {
-      await login(email, password)
-      navigate('/', { replace: true })
+      const data = (await login(email, password)) as {
+        user?: { locationName?: string | null; locationCode?: string | null }
+      }
+      const hasLocation = Boolean(data?.user?.locationName || data?.user?.locationCode)
+      navigate(hasLocation ? '/' : '/set-location', { replace: true })
     } catch (err: unknown) {
       setError(getApiErrorMessage(err, '로그인에 실패했습니다.'))
     } finally {
@@ -70,7 +73,8 @@ export default function LoginPage() {
           />
         </div>
         {error && (
-          <p className="text-body-14 text-error" role="alert">
+          <p className="flex items-center gap-1 text-body-14 text-error" role="alert">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
             {error}
           </p>
         )}

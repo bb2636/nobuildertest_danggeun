@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import MainLayout from './components/MainLayout'
@@ -20,10 +20,15 @@ import PostFormPage from './pages/PostFormPage'
 import ProfilePage from './pages/ProfilePage'
 import SearchPage from './pages/SearchPage'
 import SignUpPage from './pages/SignUpPage'
+import SetLocationPage from './pages/SetLocationPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { token } = useAuth()
+  const { token, user } = useAuth()
+  const location = useLocation()
   if (!token) return <Navigate to="/login" replace />
+  const needsLocation = user && !user.locationName && !user.locationCode
+  const isSetLocationPage = location.pathname === '/set-location'
+  if (needsLocation && !isSetLocationPage) return <Navigate to="/set-location" replace />
   return <>{children}</>
 }
 
@@ -35,6 +40,14 @@ export default function App() {
           <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
+          <Route
+            path="/set-location"
+            element={
+              <ProtectedRoute>
+                <SetLocationPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/"
             element={

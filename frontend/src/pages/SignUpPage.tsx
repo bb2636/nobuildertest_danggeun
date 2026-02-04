@@ -1,45 +1,63 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Carrot } from 'lucide-react'
+import { Carrot, AlertTriangle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { locationsApi, type LocationItem } from '../api/locations'
 import { getApiErrorMessage } from '../utils/apiError'
+
+type FieldError = { email?: string; password?: string; passwordConfirm?: string; nickname?: string }
 
 export default function SignUpPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [passwordConfirm, setPasswordConfirm] = useState('')
   const [nickname, setNickname] = useState('')
-  const [locationCode, setLocationCode] = useState('')
-  const [locations, setLocations] = useState<LocationItem[]>([])
-  const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<FieldError>({})
+  const [submitError, setSubmitError] = useState('')
   const [loading, setLoading] = useState(false)
   const { signUp } = useAuth()
   const navigate = useNavigate()
 
-  useEffect(() => {
-    locationsApi.getList().then((res) => setLocations(res.data.locations ?? [])).catch(() => {})
-  }, [])
+  const validate = (): boolean => {
+    const err: FieldError = {}
+    if (!email.trim()) err.email = '이메일을 입력해주세요'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) err.email = '올바른 이메일 형식으로 입력해주세요'
+    if (!password) err.password = '비밀번호를 입력해주세요'
+    else if (password.length < 8) err.password = '비밀번호는 8자리 이상으로 입력해주세요'
+    if (!passwordConfirm) err.passwordConfirm = '비밀번호를 입력해주세요'
+    else if (password !== passwordConfirm) err.passwordConfirm = '비밀번호가 일치하지 않습니다.'
+    if (!nickname.trim()) err.nickname = '닉네임을 입력해주세요'
+    setFieldErrors(err)
+    return Object.keys(err).length === 0
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
+    setFieldErrors({})
+    setSubmitError('')
+    if (!validate()) return
     setLoading(true)
     try {
-      const selected = locations.find((l) => l.code === locationCode)
       await signUp({
-        email,
+        email: email.trim(),
         password,
-        nickname,
-        locationName: selected?.name ?? undefined,
-        locationCode: locationCode || undefined,
+        nickname: nickname.trim(),
       })
-      navigate('/', { replace: true })
+      navigate('/set-location', { replace: true })
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, '회원가입에 실패했습니다.'))
+      setSubmitError(getApiErrorMessage(err, '회원가입에 실패했습니다.'))
     } finally {
       setLoading(false)
     }
   }
+
+  const handleLocationChange = (code: string, name: string) => {
+    setLocationCode(code)
+    setLocationName(name)
+  }
+
+  const inputClass =
+    'w-full h-12 px-4 rounded-lg border border-gray-20 text-body-16 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-point-0 focus:border-transparent'
+  const errorBorder = 'border-error focus:ring-error'
 
   return (
     <div className="min-h-screen flex flex-col bg-white px-6 pt-12 pb-8">
@@ -61,12 +79,18 @@ export default function SignUpPage() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="example@email.com"
-            className="w-full h-12 px-4 rounded-lg border border-gray-20 text-body-16 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-point-0 focus:border-transparent"
-            required
-            aria-required="true"
+            placeholder="이메일을 입력해주세요"
+            className={`${inputClass} ${fieldErrors.email ? errorBorder : ''}`}
+            aria-invalid={!!fieldErrors.email}
+            aria-describedby={fieldErrors.email ? 'email-error' : undefined}
             autoComplete="email"
           />
+          {fieldErrors.email && (
+            <p id="email-error" className="mt-1 flex items-center gap-1 text-body-12 text-error" role="alert">
+              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+              {fieldErrors.email}
+            </p>
+          )}
         </div>
         <div>
           <label htmlFor="password" className="block text-body-14 font-medium text-gray-100 mb-1.5">
@@ -77,13 +101,38 @@ export default function SignUpPage() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="6자 이상"
-            className="w-full h-12 px-4 rounded-lg border border-gray-20 text-body-16 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-point-0 focus:border-transparent"
-            required
-            aria-required="true"
-            minLength={6}
+            placeholder="비밀번호를 입력해주세요"
+            className={`${inputClass} ${fieldErrors.password ? errorBorder : ''}`}
+            aria-invalid={!!fieldErrors.password}
             autoComplete="new-password"
           />
+          {fieldErrors.password && (
+            <p className="mt-1 flex items-center gap-1 text-body-12 text-error" role="alert">
+              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+              {fieldErrors.password}
+            </p>
+          )}
+        </div>
+        <div>
+          <label htmlFor="passwordConfirm" className="block text-body-14 font-medium text-gray-100 mb-1.5">
+            비밀번호 확인
+          </label>
+          <input
+            id="passwordConfirm"
+            type="password"
+            value={passwordConfirm}
+            onChange={(e) => setPasswordConfirm(e.target.value)}
+            placeholder="비밀번호를 다시 입력해주세요"
+            className={`${inputClass} ${fieldErrors.passwordConfirm ? errorBorder : ''}`}
+            aria-invalid={!!fieldErrors.passwordConfirm}
+            autoComplete="new-password"
+          />
+          {fieldErrors.passwordConfirm && (
+            <p className="mt-1 flex items-center gap-1 text-body-12 text-error" role="alert">
+              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+              {fieldErrors.passwordConfirm}
+            </p>
+          )}
         </div>
         <div>
           <label htmlFor="nickname" className="block text-body-14 font-medium text-gray-100 mb-1.5">
@@ -94,34 +143,22 @@ export default function SignUpPage() {
             type="text"
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
-            placeholder="닉네임을 입력하세요"
-            className="w-full h-12 px-4 rounded-lg border border-gray-20 text-body-16 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-point-0 focus:border-transparent"
-            required
-            aria-required="true"
+            placeholder="닉네임을 입력해주세요"
+            className={`${inputClass} ${fieldErrors.nickname ? errorBorder : ''}`}
+            aria-invalid={!!fieldErrors.nickname}
             autoComplete="username"
           />
+          {fieldErrors.nickname && (
+            <p className="mt-1 flex items-center gap-1 text-body-12 text-error" role="alert">
+              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+              {fieldErrors.nickname}
+            </p>
+          )}
         </div>
-        <div>
-          <label htmlFor="location" className="block text-body-14 font-medium text-gray-100 mb-1.5">
-            동네 (선택)
-          </label>
-          <select
-            id="location"
-            value={locationCode}
-            onChange={(e) => setLocationCode(e.target.value)}
-            className="w-full h-12 px-4 rounded-lg border border-gray-20 text-body-16 text-gray-100 focus:outline-none focus:ring-2 focus:ring-point-0 focus:border-transparent bg-white"
-          >
-            <option value="">동네를 선택하세요</option>
-            {locations.map((loc) => (
-              <option key={loc.code} value={loc.code}>
-                {loc.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        {error && (
-          <p className="text-body-14 text-error" role="alert">
-            {error}
+        {submitError && (
+          <p className="flex items-center gap-1 text-body-14 text-error" role="alert">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+            {submitError}
           </p>
         )}
         <button

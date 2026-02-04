@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, ArrowLeft, X, ImagePlus } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, X, ImagePlus, ChevronDown } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { postsApi, CreatePostBody, PostStatus } from '../api/posts'
 import { uploadApi } from '../api/upload'
@@ -45,12 +45,24 @@ export default function PostFormPage() {
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState<{ title?: string; content?: string; price?: string }>({})
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false)
+  const [categoryOpen, setCategoryOpen] = useState(false)
+  const categoryRef = useRef<HTMLDivElement>(null)
 
   const { data: postData, isLoading: loading, isError: isLoadError } = useQuery({
     queryKey: ['post', postId, 'edit'],
     queryFn: () => postsApi.getDetail(postId, { forEdit: true }).then((res) => res.data),
     enabled: isEdit && Number.isInteger(postId) && postId >= 1,
   })
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (categoryRef.current && !categoryRef.current.contains(e.target as Node)) {
+        setCategoryOpen(false)
+      }
+    }
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [])
 
   useEffect(() => {
     if (!postData) return
@@ -358,21 +370,39 @@ export default function PostFormPage() {
             </p>
           )}
         </div>
-        <div>
-          <label className="block text-body-14 font-medium text-gray-100 mb-1.5">
+        <div ref={categoryRef} className="relative">
+          <label htmlFor="category" className="block text-body-14 font-medium text-gray-100 mb-1.5">
             카테고리
           </label>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="w-full h-12 px-4 rounded-lg border border-gray-20 text-body-16 text-gray-100 focus:outline-none focus:ring-2 focus:ring-point-0 focus:border-transparent bg-white"
+          <button
+            id="category"
+            type="button"
+            onClick={() => setCategoryOpen((o) => !o)}
+            className="w-full h-12 px-4 rounded-lg border border-gray-20 text-body-16 text-gray-100 focus:outline-none focus:ring-2 focus:ring-point-0 focus:border-transparent bg-white flex items-center justify-between text-left"
           >
-            {CATEGORY_OPTIONS.map((opt) => (
-              <option key={opt.value || 'none'} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+            <span className={category ? 'text-gray-100' : 'text-gray-40'}>
+              {CATEGORY_OPTIONS.find((o) => o.value === category)?.label ?? '카테고리 선택'}
+            </span>
+            <ChevronDown className={`w-5 h-5 text-gray-50 flex-shrink-0 transition-transform ${categoryOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {categoryOpen && (
+            <ul className="absolute z-20 left-0 right-0 mt-1 py-1 bg-white border border-gray-20 rounded-lg shadow-lg overflow-y-auto max-h-[200px]">
+              {CATEGORY_OPTIONS.map((opt) => (
+                <li key={opt.value || 'none'}>
+                  <button
+                    type="button"
+                    className="w-full px-4 py-2.5 text-left text-body-14 text-gray-100 hover:bg-grey-50 focus:bg-grey-50 focus:outline-none"
+                    onClick={() => {
+                      setCategory(opt.value)
+                      setCategoryOpen(false)
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <div>
           <label className="block text-body-14 font-medium text-gray-100 mb-1.5">
