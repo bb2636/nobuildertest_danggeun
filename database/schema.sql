@@ -114,12 +114,15 @@ CREATE TABLE IF NOT EXISTS `community_posts` (
   `user_id` INT UNSIGNED NOT NULL,
   `title` VARCHAR(200) NOT NULL,
   `content` TEXT,
+  `topic` VARCHAR(50) DEFAULT NULL COMMENT '주제 (맛집, 생활/편의, 분실/실종 등)',
   `location_name` VARCHAR(100) DEFAULT NULL,
   `location_code` VARCHAR(20) DEFAULT NULL,
+  `view_count` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '조회수',
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_community_posts_user_id` (`user_id`),
+  KEY `idx_community_posts_topic` (`topic`),
   KEY `idx_community_posts_location_code` (`location_code`),
   KEY `idx_community_posts_created_at` (`created_at`),
   CONSTRAINT `fk_community_posts_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
@@ -139,6 +142,16 @@ CREATE TABLE IF NOT EXISTS `community_comments` (
   KEY `idx_community_comments_user_id` (`user_id`),
   CONSTRAINT `fk_community_comments_post` FOREIGN KEY (`post_id`) REFERENCES `community_posts` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_community_comments_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ----------------------------------------
+-- 동네생활 알림 읽음 (마이그레이션 003에서도 생성 가능)
+-- ----------------------------------------
+CREATE TABLE IF NOT EXISTS `community_notification_read` (
+  `user_id` INT UNSIGNED NOT NULL,
+  `read_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`),
+  CONSTRAINT `fk_community_notification_read_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------

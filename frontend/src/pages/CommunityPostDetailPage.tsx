@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, MapPin, MessageSquare, Send } from 'lucide-react'
+import { ArrowLeft, MapPin, MessageSquare, Send, Eye } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { communityApi, type CommunityPostDetail, type CommunityComment } from '../api/community'
 import { getChatSocket, type CommunityCommentPayload } from '../lib/socket'
@@ -11,7 +11,7 @@ import { getApiErrorMessage } from '../utils/apiError'
 export default function CommunityPostDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, token } = useAuth()
   const [post, setPost] = useState<CommunityPostDetail | null>(null)
   const [comments, setComments] = useState<CommunityComment[]>([])
   const [commentInput, setCommentInput] = useState('')
@@ -23,7 +23,6 @@ export default function CommunityPostDetailPage() {
   const listRef = useRef<HTMLDivElement>(null)
 
   const postId = id ? parseInt(id, 10) : NaN
-  const token = user?.token ?? null
 
   useEffect(() => {
     if (!Number.isInteger(postId) || postId < 1) {
@@ -172,6 +171,11 @@ export default function CommunityPostDetailPage() {
 
       <main className="flex-1 flex flex-col min-h-0">
         <article className="px-4 py-4 border-b border-gray-10 flex-shrink-0">
+          {post.topic && (
+            <span className="inline-flex px-2.5 py-1 rounded-md bg-gray-10 text-body-14 text-gray-70 mb-2">
+              {post.topic}
+            </span>
+          )}
           <h2 className="text-title-3 text-gray-100">{post.title}</h2>
           <div className="flex items-center gap-2 mt-2 text-body-12 text-gray-60">
             {post.locationName && (
@@ -183,6 +187,10 @@ export default function CommunityPostDetailPage() {
             <span>{post.userNickname}</span>
             <span>·</span>
             <span>{formatRelativeTime(post.createdAt)}</span>
+            <span className="flex items-center gap-0.5 ml-auto">
+              <Eye className="w-3.5 h-3.5" />
+              조회 {post.viewCount ?? 0}
+            </span>
           </div>
           {post.content && (
             <p className="text-body-16 text-gray-100 mt-4 whitespace-pre-wrap">
@@ -213,14 +221,14 @@ export default function CommunityPostDetailPage() {
           )}
         </article>
 
-        <section className="flex-1 flex flex-col min-h-0 border-t border-gray-10">
+        <section className={`flex-1 flex flex-col min-h-0 border-t border-gray-10 ${user ? 'pb-20' : ''}`}>
           <div className="px-4 py-2 border-b border-gray-10 flex items-center gap-1.5 text-body-14 text-gray-70">
             <MessageSquare className="w-4 h-4" />
             댓글 {post.commentCount}
           </div>
           <div
             ref={listRef}
-            className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-3"
+            className="flex-1 overflow-y-auto px-4 py-3 pb-24 flex flex-col gap-3 min-h-0"
           >
             {comments.map((c) => (
               <div key={c.id} className="flex flex-col gap-0.5">
@@ -238,28 +246,32 @@ export default function CommunityPostDetailPage() {
           {commentError && (
             <p className="px-4 py-1 text-body-12 text-error">{commentError}</p>
           )}
-          {user && (
-            <div className="border-t border-gray-10 p-2 flex gap-2 flex-shrink-0">
-              <input
-                type="text"
-                value={commentInput}
-                onChange={(e) => setCommentInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSubmitComment()}
-                placeholder="댓글을 입력하세요"
-                className="flex-1 h-10 px-3 rounded-lg border border-gray-20 text-body-14 focus:outline-none focus:ring-2 focus:ring-point-0"
-              />
-              <button
-                type="button"
-                onClick={handleSubmitComment}
-                disabled={!commentInput.trim() || commentLoading}
-                className="h-10 px-4 rounded-lg bg-point-0 text-white flex items-center gap-1 disabled:opacity-50"
-              >
-                <Send className="w-4 h-4" />
-                등록
-              </button>
-            </div>
-          )}
         </section>
+
+        {user && (
+          <div
+            className="fixed left-0 right-0 bottom-16 z-20 max-w-mobile mx-auto bg-white border-t border-gray-10 p-2 flex gap-2"
+            style={{ maxWidth: 'var(--max-w-mobile, 420px)' }}
+          >
+            <input
+              type="text"
+              value={commentInput}
+              onChange={(e) => setCommentInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSubmitComment()}
+              placeholder="댓글을 입력하세요"
+              className="flex-1 h-10 px-3 rounded-lg border border-gray-20 text-body-14 focus:outline-none focus:ring-2 focus:ring-point-0"
+            />
+            <button
+              type="button"
+              onClick={handleSubmitComment}
+              disabled={!commentInput.trim() || commentLoading}
+              className="h-10 px-4 rounded-lg bg-point-0 text-white flex items-center gap-1 disabled:opacity-50"
+            >
+              <Send className="w-4 h-4" />
+              등록
+            </button>
+          </div>
+        )}
       </main>
     </div>
   )

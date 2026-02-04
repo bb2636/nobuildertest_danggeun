@@ -9,6 +9,17 @@ import {
 import { postRepository } from '../repositories/post.repository';
 import { PostStatus } from '../types';
 
+/** 조회수 중복 카운트 방지: 같은 방문자가 N초 내 재요청 시 1회만 카운트 (동네생활과 동일) */
+const VIEW_DEDUP_MS = 60 * 1000;
+const postViewDedup = new Map<string, number>();
+
+function prunePostViewDedup(): void {
+  const now = Date.now();
+  for (const [key, ts] of postViewDedup.entries()) {
+    if (now - ts > VIEW_DEDUP_MS) postViewDedup.delete(key);
+  }
+}
+
 /** MySQL2는 JSON 컬럼을 이미 파싱된 객체/배열로 반환하므로 둘 다 처리 */
 function parseImageUrls(json: string | unknown[] | null | undefined): string[] | null {
   if (json == null) return null;
@@ -54,12 +65,24 @@ export const postService = {
     return { posts, total, page, limit, totalPages };
   },
 
-  async getDetail(id: number, skipViewIncrement = false): Promise<PostDetailDto | null> {
+  async getDetail(id: number, skipViewIncrement = false, viewer?: { userId?: number; ip?: string }): Promise<PostDetailDto | null> {
     const row = await postRepository.findById(id);
     if (!row) return null;
-    if (!skipViewIncrement) await postRepository.incrementViewCount(id);
+    let didIncrement = false;
+    if (!skipViewIncrement) {
+      const viewerKey = viewer?.userId ?? viewer?.ip ?? 'unknown';
+      const dedupKey = `post:${id}:${viewerKey}`;
+      const now = Date.now();
+      const last = postViewDedup.get(dedupKey);
+      if (last == null || now - last >= VIEW_DEDUP_MS) {
+        await postRepository.incrementViewCount(id);
+        postViewDedup.set(dedupKey, now);
+        didIncrement = true;
+        if (postViewDedup.size > 10000) prunePostViewDedup();
+      }
+    }
     const urls = parseImageUrls(row.image_urls);
-    const viewCount = skipViewIncrement ? row.view_count : row.view_count + 1;
+    const viewCount = skipViewIncrement ? row.view_count : row.view_count + (didIncrement ? 1 : 0);
     return {
       id: row.id,
       userId: row.user_id,

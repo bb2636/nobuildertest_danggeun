@@ -6,8 +6,10 @@ export interface CommunityPostListItem {
   userNickname: string
   title: string
   content: string | null
+  topic: string | null
   locationName: string | null
   locationCode: string | null
+  viewCount?: number
   createdAt: string
   updatedAt: string
   commentCount: number
@@ -35,6 +37,8 @@ export interface CommunityListParams {
   page?: number
   limit?: number
   locationCode?: string
+  topic?: string
+  sort?: 'latest' | 'popular'
   keyword?: string
   my?: boolean
 }
@@ -79,10 +83,10 @@ export const communityApi = {
   getDetail: (id: number) =>
     api.get<CommunityPostDetail>(`/api/community/${id}`),
 
-  create: (body: { title: string; content?: string | null; locationName?: string | null; locationCode?: string | null }) =>
+  create: (body: { title: string; content?: string | null; topic?: string | null; locationName?: string | null; locationCode?: string | null }) =>
     api.post<{ id: number }>('/api/community', body),
 
-  update: (id: number, body: { title?: string; content?: string | null }) =>
+  update: (id: number, body: { title?: string; content?: string | null; topic?: string | null }) =>
     api.put<{ ok: boolean }>(`/api/community/${id}`, body),
 
   delete: (id: number) =>

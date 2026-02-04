@@ -14,6 +14,10 @@
 3. **이미 인덱스가 있는 경우**: `ALTER TABLE`에서 해당 인덱스가 있으면 에러가 날 수 있음.  
    필요 시 `SHOW INDEX FROM chat_messages;` 로 확인 후, 없을 때만 실행.
 
+4. **동네생활 샘플 데이터**: 마이그레이션 적용 후 샘플 게시글이 필요하면  
+   `mysql -u root -p1234 danggeun < database/seed_community_posts.sql`  
+   (users 테이블에 id 1, 2, 3 사용자와 역삼동·송도동 등 location_code가 있어야 함)
+
 ## 파일 명명
 
 - `NNN_설명.sql` (예: `002_add_posts_category_index.sql`)

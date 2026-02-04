@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ChevronRight } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { communityApi } from '../api/community'
+import { COMMUNITY_TOPIC_GROUPS } from '../constants/community'
 import Spinner from '../components/Spinner'
 import { getApiErrorMessage } from '../utils/apiError'
 
@@ -15,6 +16,8 @@ export default function CommunityPostFormPage() {
 
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [topic, setTopic] = useState('')
+  const [topicModalOpen, setTopicModalOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [loadingPost, setLoadingPost] = useState(isEdit)
@@ -34,6 +37,7 @@ export default function CommunityPostFormPage() {
         if (!cancelled) {
           setTitle(res.data.title)
           setContent(res.data.content ?? '')
+          setTopic(res.data.topic ?? '')
           setLoadingPost(false)
         }
       })
@@ -59,12 +63,17 @@ export default function CommunityPostFormPage() {
     setLoading(true)
     try {
       if (isEdit) {
-        await communityApi.update(postId, { title: trimmedTitle, content: content.trim() || null })
+        await communityApi.update(postId, {
+          title: trimmedTitle,
+          content: content.trim() || null,
+          topic: topic.trim() || null,
+        })
         navigate(`/community/${postId}`, { replace: true })
       } else {
         const { data } = await communityApi.create({
           title: trimmedTitle,
           content: content.trim() || null,
+          topic: topic.trim() || null,
           locationName: user?.locationName ?? null,
           locationCode: user?.locationCode ?? null,
         })
@@ -144,6 +153,21 @@ export default function CommunityPostFormPage() {
       </header>
       <form onSubmit={handleSubmit} className="flex-1 px-4 py-4 flex flex-col gap-4">
         <div>
+          <label className="block text-body-14 font-medium text-gray-100 mb-1.5">
+            게시글 주제
+          </label>
+          <button
+            type="button"
+            onClick={() => setTopicModalOpen(true)}
+            className="w-full flex items-center justify-between h-12 px-4 rounded-lg border border-gray-20 text-body-16 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-point-0"
+          >
+            <span className={topic ? '' : 'text-gray-40'}>
+              {topic || '게시글의 주제를 선택해주세요.'}
+            </span>
+            <ChevronRight className="w-5 h-5 text-gray-50 flex-shrink-0" />
+          </button>
+        </div>
+        <div>
           <label htmlFor="community-title" className="block text-body-14 font-medium text-gray-100 mb-1.5">
             제목 *
           </label>
@@ -187,6 +211,60 @@ export default function CommunityPostFormPage() {
           {loading ? '처리 중...' : isEdit ? '수정하기' : '등록하기'}
         </button>
       </form>
+
+      {topicModalOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-30 bg-black/50"
+            onClick={() => setTopicModalOpen(false)}
+            aria-hidden
+          />
+          <div className="fixed bottom-0 left-0 right-0 z-30 max-w-mobile mx-auto bg-white rounded-t-2xl shadow-lg pb-safe max-h-[85vh] overflow-y-auto">
+            <div className="p-2 border-b border-gray-10">
+              <div className="w-8 h-1 rounded-full bg-gray-20 mx-auto" aria-hidden />
+            </div>
+            <div className="p-4">
+              <h2 className="text-subhead text-gray-100 mb-4">게시글 주제를 선택해주세요.</h2>
+              <div className="space-y-5">
+                {COMMUNITY_TOPIC_GROUPS.map((group) => (
+                  <div key={group.label}>
+                    <p className="flex items-center gap-1.5 text-body-14 font-medium text-gray-80 mb-2">
+                      <span>{group.icon}</span>
+                      {group.label}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {group.topics.map((t) => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => {
+                            setTopic(t)
+                            setTopicModalOpen(false)
+                          }}
+                          className={`px-3 py-1.5 rounded-full text-body-14 ${
+                            topic === t
+                              ? 'bg-point-0 text-white'
+                              : 'bg-gray-10 text-gray-100 hover:bg-gray-20'
+                          }`}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setTopicModalOpen(false)}
+                className="w-full mt-4 py-3 text-body-16 text-gray-60 border border-gray-20 rounded-lg"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

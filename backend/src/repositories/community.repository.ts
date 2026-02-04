@@ -8,8 +8,10 @@ interface CommunityPostRow {
   user_id: number;
   title: string;
   content: string | null;
+  topic: string | null;
   location_name: string | null;
   location_code: string | null;
+  view_count: number;
   created_at: Date;
   updated_at: Date;
   user_nickname: string;
@@ -17,7 +19,7 @@ interface CommunityPostRow {
 }
 
 export const communityRepository = {
-  async findList(params: { locationCode?: string; page?: number; limit?: number; userId?: number; keyword?: string }): Promise<{ rows: CommunityPostRow[]; total: number }> {
+  async findList(params: { locationCode?: string; topic?: string; sort?: 'latest' | 'popular'; page?: number; limit?: number; userId?: number; keyword?: string }): Promise<{ rows: CommunityPostRow[]; total: number }> {
     const page = Math.max(1, params.page ?? 1);
     const limit = Math.min(50, Math.max(1, params.limit ?? 20));
     const offset = (page - 1) * limit;
@@ -26,6 +28,10 @@ export const communityRepository = {
     if (params.locationCode && params.locationCode.trim()) {
       conditions.push('p.location_code = ?');
       values.push(params.locationCode.trim());
+    }
+    if (params.topic && params.topic.trim()) {
+      conditions.push('p.topic = ?');
+      values.push(params.topic.trim());
     }
     if (params.userId != null) {
       conditions.push('p.user_id = ?');
@@ -43,14 +49,18 @@ export const communityRepository = {
 
     const limitNum = Number(limit) || 20;
     const offsetNum = Number(offset) || 0;
+    const orderBy =
+      params.sort === 'popular'
+        ? 'ORDER BY COALESCE(p.view_count, 0) DESC, p.created_at DESC'
+        : 'ORDER BY p.created_at DESC';
     const listSql = `
-      SELECT p.id, p.user_id, p.title, p.content, p.location_name, p.location_code,
-             p.created_at, p.updated_at, u.nickname AS user_nickname,
+      SELECT p.id, p.user_id, p.title, p.content, p.topic, p.location_name, p.location_code,
+             COALESCE(p.view_count, 0) AS view_count, p.created_at, p.updated_at, u.nickname AS user_nickname,
              (SELECT COUNT(*) FROM ${COMMENTS_TABLE} c WHERE c.post_id = p.id) AS comment_count
       FROM ${POSTS_TABLE} p
       INNER JOIN users u ON p.user_id = u.id
       WHERE ${whereClause}
-      ORDER BY p.created_at DESC
+      ${orderBy}
       LIMIT ${limitNum} OFFSET ${offsetNum}
     `;
     const rows = await query<CommunityPostRow[]>(listSql, values);
@@ -59,8 +69,8 @@ export const communityRepository = {
 
   async findById(id: number): Promise<(CommunityPostRow & { updated_at: Date }) | null> {
     const sql = `
-      SELECT p.id, p.user_id, p.title, p.content, p.location_name, p.location_code,
-             p.created_at, p.updated_at, u.nickname AS user_nickname,
+      SELECT p.id, p.user_id, p.title, p.content, p.topic, p.location_name, p.location_code,
+             COALESCE(p.view_count, 0) AS view_count, p.created_at, p.updated_at, u.nickname AS user_nickname,
              (SELECT COUNT(*) FROM ${COMMENTS_TABLE} c WHERE c.post_id = p.id) AS comment_count
       FROM ${POSTS_TABLE} p
       INNER JOIN users u ON p.user_id = u.id
@@ -71,23 +81,31 @@ export const communityRepository = {
     return rows[0];
   },
 
+  async incrementViewCount(id: number): Promise<void> {
+    await query(
+      `UPDATE ${POSTS_TABLE} SET view_count = COALESCE(view_count, 0) + 1 WHERE id = ?`,
+      [id]
+    );
+  },
+
   async create(data: {
     user_id: number;
     title: string;
     content: string | null;
+    topic: string | null;
     location_name: string | null;
     location_code: string | null;
   }): Promise<number> {
     const result = await query<{ insertId: number }>(
-      `INSERT INTO ${POSTS_TABLE} (user_id, title, content, location_name, location_code)
-       VALUES (?, ?, ?, ?, ?)`,
-      [data.user_id, data.title, data.content, data.location_name, data.location_code]
+      `INSERT INTO ${POSTS_TABLE} (user_id, title, content, topic, location_name, location_code)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [data.user_id, data.title, data.content, data.topic ?? null, data.location_name, data.location_code]
     );
     const header = result as unknown as { insertId: number };
     return header.insertId;
   },
 
-  async update(id: number, data: { title?: string; content?: string | null }): Promise<boolean> {
+  async update(id: number, data: { title?: string; content?: string | null; topic?: string | null }): Promise<boolean> {
     const updates: string[] = [];
     const values: (string | number)[] = [];
     if (data.title !== undefined) {
@@ -97,6 +115,10 @@ export const communityRepository = {
     if (data.content !== undefined) {
       updates.push('content = ?');
       values.push(data.content);
+    }
+    if (data.topic !== undefined) {
+      updates.push('topic = ?');
+      values.push(data.topic ?? null);
     }
     if (updates.length === 0) return true;
     values.push(id);

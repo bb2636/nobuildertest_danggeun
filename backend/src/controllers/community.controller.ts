@@ -14,12 +14,16 @@ export const communityController = {
       return;
     }
     const locationCode = req.query.locationCode as string | undefined;
+    const topic = (req.query.topic as string)?.trim() || undefined;
+    const sort = (req.query.sort as string) === 'popular' ? 'popular' : 'latest';
     const keyword = (req.query.keyword as string)?.trim() || undefined;
     const page = req.query.page ? Number(req.query.page) : undefined;
     const limit = req.query.limit ? Number(req.query.limit) : undefined;
     try {
       const result = await communityService.getList({
         locationCode,
+        topic,
+        sort,
         keyword,
         page,
         limit,
@@ -43,7 +47,8 @@ export const communityController = {
       return;
     }
     try {
-      const result = await communityService.getDetail(id);
+      const viewer = { userId: req.userId ?? undefined, ip: req.ip };
+      const result = await communityService.getDetail(id, viewer);
       if (!result) {
         res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
         return;
@@ -93,11 +98,12 @@ export const communityController = {
       res.status(400).json({ message: '올바른 게시글 ID가 아닙니다.' });
       return;
     }
-    const { title, content } = req.body;
+    const { title, content, topic } = req.body;
     try {
       const result = await communityService.update(userId, id, {
         title: title !== undefined ? String(title).trim() : undefined,
         content: content !== undefined ? content : undefined,
+        topic: topic !== undefined ? (topic ? String(topic).trim() : null) : undefined,
       });
       if (!result.ok) {
         res.status(result.message === '게시글을 찾을 수 없습니다.' ? 404 : 403).json({ message: result.message });

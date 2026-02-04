@@ -1,11 +1,24 @@
 import { communityRepository } from '../repositories/community.repository';
 
+/** 조회수 중복 카운트 방지: 같은 방문자(유저/IP)가 N초 내 재요청 시 1회만 카운트 */
+const VIEW_DEDUP_MS = 60 * 1000; // 1분
+const viewCountDedup = new Map<string, number>();
+
+function pruneViewDedup(): void {
+  const now = Date.now();
+  for (const [key, ts] of viewCountDedup.entries()) {
+    if (now - ts > VIEW_DEDUP_MS) viewCountDedup.delete(key);
+  }
+}
+
 export const communityService = {
-  async getList(params: { locationCode?: string; page?: number; limit?: number; userId?: number; keyword?: string }) {
+  async getList(params: { locationCode?: string; topic?: string; sort?: 'latest' | 'popular'; page?: number; limit?: number; userId?: number; keyword?: string }) {
     const page = Math.max(1, params.page ?? 1);
     const limit = Math.min(50, Math.max(1, params.limit ?? 20));
     const { rows, total } = await communityRepository.findList({
       locationCode: params.locationCode,
+      topic: params.topic,
+      sort: params.sort,
       page,
       limit,
       userId: params.userId,
@@ -17,8 +30,10 @@ export const communityService = {
       userNickname: row.user_nickname,
       title: row.title,
       content: row.content,
+      topic: row.topic,
       locationName: row.location_name,
       locationCode: row.location_code,
+      viewCount: Number(row.view_count ?? 0),
       createdAt: new Date(row.created_at).toISOString(),
       updatedAt: new Date(row.updated_at).toISOString(),
       commentCount: Number(row.comment_count ?? 0),
@@ -27,7 +42,16 @@ export const communityService = {
     return { posts, total, page, limit, totalPages };
   },
 
-  async getDetail(id: number) {
+  async getDetail(id: number, viewer?: { userId?: number; ip?: string }) {
+    const viewerKey = viewer?.userId ?? viewer?.ip ?? 'unknown';
+    const dedupKey = `${id}:${viewerKey}`;
+    const now = Date.now();
+    const last = viewCountDedup.get(dedupKey);
+    if (last == null || now - last >= VIEW_DEDUP_MS) {
+      await communityRepository.incrementViewCount(id);
+      viewCountDedup.set(dedupKey, now);
+      if (viewCountDedup.size > 10000) pruneViewDedup();
+    }
     const row = await communityRepository.findById(id);
     if (!row) return null;
     return {
@@ -36,8 +60,10 @@ export const communityService = {
       userNickname: row.user_nickname,
       title: row.title,
       content: row.content,
+      topic: row.topic,
       locationName: row.location_name,
       locationCode: row.location_code,
+      viewCount: Number(row.view_count ?? 0),
       createdAt: new Date(row.created_at).toISOString(),
       updatedAt: new Date(row.updated_at).toISOString(),
       commentCount: Number(row.comment_count ?? 0),
@@ -46,25 +72,27 @@ export const communityService = {
 
   async create(
     userId: number,
-    body: { title: string; content?: string | null; locationName?: string | null; locationCode?: string | null }
+    body: { title: string; content?: string | null; topic?: string | null; locationName?: string | null; locationCode?: string | null }
   ) {
     const id = await communityRepository.create({
       user_id: userId,
       title: body.title.trim(),
       content: body.content?.trim() || null,
+      topic: body.topic?.trim() || null,
       location_name: body.locationName ?? null,
       location_code: body.locationCode ?? null,
     });
     return { id };
   },
 
-  async update(userId: number, postId: number, body: { title?: string; content?: string | null }) {
+  async update(userId: number, postId: number, body: { title?: string; content?: string | null; topic?: string | null }) {
     const ownerId = await communityRepository.findUserIdByPostId(postId);
     if (ownerId === null) return { ok: false, message: '게시글을 찾을 수 없습니다.' };
     if (ownerId !== userId) return { ok: false, message: '본인 게시글만 수정할 수 있습니다.' };
     const updated = await communityRepository.update(postId, {
       title: body.title?.trim(),
       content: body.content !== undefined ? (body.content?.trim() || null) : undefined,
+      topic: body.topic !== undefined ? (body.topic?.trim() || null) : undefined,
     });
     return { ok: updated };
   },

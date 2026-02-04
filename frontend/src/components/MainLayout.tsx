@@ -22,6 +22,7 @@ export default function MainLayout() {
   const queryClient = useQueryClient()
   const { token } = useAuth()
   const isHome = location.pathname === '/'
+  const isCommunityList = location.pathname === '/community'
   const isCommunity =
     location.pathname === '/community' ||
     (location.pathname.startsWith('/community/') &&
@@ -67,7 +68,7 @@ export default function MainLayout() {
           <Plus className="w-7 h-7" strokeWidth={2.5} />
         </Link>
       )}
-      {isCommunity && (
+      {isCommunityList && (
         <Link
           to="/community/new"
           className="fixed right-4 z-20 w-14 h-14 rounded-full bg-point-0 text-white flex items-center justify-center shadow-lg hover:bg-point-0/90 active:scale-95 transition-all"

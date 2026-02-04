@@ -44,7 +44,8 @@ export const postController = {
       return;
     }
     try {
-      const result = await postService.getDetail(id, skipViewIncrement);
+      const viewer = { userId: req.userId ?? undefined, ip: req.ip };
+      const result = await postService.getDetail(id, skipViewIncrement, viewer);
       if (!result) {
         res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
         return;
