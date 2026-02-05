@@ -46,7 +46,31 @@ step2/
 시드 사용자 비밀번호: `password123`  
 (예: test@example.com / password123)
 
-### 2. 백엔드 실행
+### 2. 래핑 실행 (step2 루트에서 한 번에)
+
+```bash
+cd step2
+npm install
+npm run dev
+```
+
+- 백엔드 API: http://localhost:3001  
+- 프론트엔드: http://localhost:5173  
+- `/api` 요청은 Vite 프록시로 백엔드(3001)로 전달됩니다.
+
+**래핑 스크립트:**  
+| 스크립트 | 설명 |
+|---------|------|
+| `npm run dev` | 백엔드·프론트엔드 동시 실행 |
+| `npm run dev:backend` | 백엔드만 실행 |
+| `npm run dev:frontend` | 프론트엔드만 실행 |
+| `npm run install:all` | 루트 + backend + frontend 의존성 설치 |
+| `npm run build` | 백엔드·프론트엔드 빌드 |
+| `npm run test` | 백엔드 단위 테스트 |
+
+### 3. 개별 실행 (backend / frontend만)
+
+**백엔드만:**
 
 ```bash
 cd backend
@@ -57,7 +81,7 @@ npm run dev
 
 - API 서버: http://localhost:3001
 
-### 3. 프론트엔드 실행
+**프론트엔드만:**
 
 ```bash
 cd frontend
@@ -65,8 +89,7 @@ npm install
 npm run dev
 ```
 
-- 웹 앱: http://localhost:5173  
-- `/api` 요청은 Vite 프록시로 백엔드(3001)로 전달됩니다.
+- 웹 앱: http://localhost:5173
 
 ## API 목록
 
