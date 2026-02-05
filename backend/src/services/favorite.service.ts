@@ -49,11 +49,14 @@ export const favoriteService = {
         title: row.title,
         price: row.price,
         status: row.status as PostStatus,
+        category: row.category ?? null,
         locationName: row.location_name,
         imageUrl: urls && urls[0] ? urls[0] : null,
         createdAt: new Date(row.created_at).toISOString(),
         viewCount: row.view_count,
         userNickname: row.user_nickname,
+        chatCount: Number(row.chat_count) || 0,
+        favoriteCount: Number(row.favorite_count) || 0,
       };
     });
   },

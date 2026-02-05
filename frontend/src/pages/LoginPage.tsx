@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Carrot, AlertTriangle } from 'lucide-react'
+import { Carrot } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import NoticeBox from '../components/NoticeBox'
 import { getApiErrorMessage } from '../utils/apiError'
 
 export default function LoginPage() {
@@ -73,10 +74,9 @@ export default function LoginPage() {
           />
         </div>
         {error && (
-          <p className="flex items-center gap-1 text-body-14 text-error" role="alert">
-            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+          <NoticeBox variant="error">
             {error}
-          </p>
+          </NoticeBox>
         )}
         <button
           type="submit"

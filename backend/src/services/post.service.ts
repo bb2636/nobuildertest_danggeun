@@ -59,6 +59,8 @@ export const postService = {
         createdAt: new Date(row.created_at).toISOString(),
         viewCount: row.view_count,
         userNickname: row.user_nickname,
+        chatCount: Number(row.chat_count) || 0,
+        favoriteCount: Number(row.favorite_count) || 0,
       };
     });
     const totalPages = Math.ceil(total / limit) || 1;

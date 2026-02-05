@@ -35,6 +35,9 @@ export default {
           DEFAULT: '#FC5555',
           2: '#FFF5F4',
         },
+        notice: {
+          DEFAULT: '#FFF8E1',
+        },
       },
       fontSize: {
         'display-1': ['28px', { lineHeight: '36px', letterSpacing: '-0.03em' }],

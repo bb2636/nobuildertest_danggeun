@@ -5,6 +5,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { communityApi } from '../api/community'
 import { COMMUNITY_TOPIC_GROUPS } from '../constants/community'
 import Spinner from '../components/Spinner'
+import NoticeBox from '../components/NoticeBox'
+import FieldErrorTooltip from '../components/FieldErrorTooltip'
 import { getApiErrorMessage } from '../utils/apiError'
 
 export default function CommunityPostFormPage() {
@@ -20,6 +22,7 @@ export default function CommunityPostFormPage() {
   const [topicModalOpen, setTopicModalOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<{ title?: string }>({})
   const [loadingPost, setLoadingPost] = useState(isEdit)
   const [loadFailed, setLoadFailed] = useState(false)
 
@@ -55,9 +58,10 @@ export default function CommunityPostFormPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setFieldErrors({})
     const trimmedTitle = title.trim()
     if (!trimmedTitle) {
-      setError('제목을 입력해주세요.')
+      setFieldErrors({ title: '제목을 입력해주세요.' })
       return
     }
     setLoading(true)
@@ -151,7 +155,10 @@ export default function CommunityPostFormPage() {
           {isEdit ? '글 수정' : '동네생활 글쓰기'}
         </h1>
       </header>
-      <form onSubmit={handleSubmit} className="flex-1 px-4 py-4 flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex-1 px-4 py-4 flex flex-col gap-4" noValidate>
+        <NoticeBox title="안내">
+          중고거래 관련, 명예훼손, 광고/홍보 목적의 글은 올리실 수 없어요.
+        </NoticeBox>
         <div>
           <label className="block text-body-14 font-medium text-gray-100 mb-1.5">
             게시글 주제
@@ -175,12 +182,21 @@ export default function CommunityPostFormPage() {
             id="community-title"
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value)
+              if (fieldErrors.title) setFieldErrors((prev) => ({ ...prev, title: undefined }))
+            }}
             placeholder="제목을 입력하세요"
             maxLength={200}
-            className="w-full h-12 px-4 rounded-lg border border-gray-20 text-body-16 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-point-0"
+            className={`w-full h-12 px-4 rounded-lg border text-body-16 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-point-0 ${
+              fieldErrors.title ? 'border-2 border-error focus:ring-error' : 'border-gray-20 focus:ring-point-0'
+            }`}
             required
+            aria-invalid={!!fieldErrors.title}
           />
+          {fieldErrors.title && (
+            <FieldErrorTooltip message={fieldErrors.title} />
+          )}
         </div>
         <div>
           <label htmlFor="community-content" className="block text-body-14 font-medium text-gray-100 mb-1.5">
@@ -199,9 +215,9 @@ export default function CommunityPostFormPage() {
           <p className="text-body-12 text-gray-60">동네: {user.locationName}</p>
         )}
         {error && (
-          <p className="text-body-14 text-error" role="alert">
+          <NoticeBox variant="error">
             {error}
-          </p>
+          </NoticeBox>
         )}
         <button
           type="submit"

@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, ArrowLeft, X, ImagePlus, ChevronDown } from 'lucide-react'
+import { ArrowLeft, X, ImagePlus, ChevronDown } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { postsApi, CreatePostBody, PostStatus } from '../api/posts'
 import { uploadApi } from '../api/upload'
 import ImageWithFallback from '../components/ImageWithFallback'
+import FieldErrorTooltip from '../components/FieldErrorTooltip'
 import { getApiErrorMessage } from '../utils/apiError'
 
 const STATUS_OPTIONS: { value: PostStatus; label: string }[] = [
@@ -242,7 +243,7 @@ export default function PostFormPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex-1 px-4 py-4 flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex-1 px-4 py-4 flex flex-col gap-4" noValidate>
         {/* 이미지: 최상단 */}
         <div>
           <label className="block text-body-14 font-medium text-gray-100 mb-1.5">
@@ -317,10 +318,7 @@ export default function PostFormPage() {
             aria-invalid={!!fieldErrors.title}
           />
           {fieldErrors.title && (
-            <p className="mt-1.5 flex items-center gap-1 text-body-12 text-error" role="alert">
-              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-              {fieldErrors.title}
-            </p>
+            <FieldErrorTooltip message={fieldErrors.title} />
           )}
         </div>
         <div>
@@ -340,10 +338,7 @@ export default function PostFormPage() {
             aria-invalid={!!fieldErrors.content}
           />
           {fieldErrors.content && (
-            <p className="mt-1.5 flex items-center gap-1 text-body-12 text-error" role="alert">
-              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-              {fieldErrors.content}
-            </p>
+            <FieldErrorTooltip message={fieldErrors.content} />
           )}
         </div>
         <div>
@@ -364,10 +359,7 @@ export default function PostFormPage() {
             aria-invalid={!!fieldErrors.price}
           />
           {fieldErrors.price && (
-            <p className="mt-1.5 flex items-center gap-1 text-body-12 text-error" role="alert">
-              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-              {fieldErrors.price}
-            </p>
+            <FieldErrorTooltip message={fieldErrors.price} />
           )}
         </div>
         <div ref={categoryRef} className="relative">
@@ -425,10 +417,7 @@ export default function PostFormPage() {
           </div>
         </div>
         {error && (
-          <p className="text-body-14 text-error flex items-center gap-1" role="alert">
-            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-            {error}
-          </p>
+          <FieldErrorTooltip message={error} />
         )}
         <button
           type="submit"

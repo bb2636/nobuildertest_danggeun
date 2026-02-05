@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Carrot, AlertTriangle } from 'lucide-react'
+import { Carrot } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import NoticeBox from '../components/NoticeBox'
 import { getApiErrorMessage } from '../utils/apiError'
 
 type FieldError = { email?: string; password?: string; passwordConfirm?: string; nickname?: string }
@@ -86,10 +87,9 @@ export default function SignUpPage() {
             autoComplete="email"
           />
           {fieldErrors.email && (
-            <p id="email-error" className="mt-1 flex items-center gap-1 text-body-12 text-error" role="alert">
-              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+            <NoticeBox id="email-error" variant="error" className="mt-1">
               {fieldErrors.email}
-            </p>
+            </NoticeBox>
           )}
         </div>
         <div>
@@ -107,10 +107,9 @@ export default function SignUpPage() {
             autoComplete="new-password"
           />
           {fieldErrors.password && (
-            <p className="mt-1 flex items-center gap-1 text-body-12 text-error" role="alert">
-              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+            <NoticeBox variant="error" className="mt-1">
               {fieldErrors.password}
-            </p>
+            </NoticeBox>
           )}
         </div>
         <div>
@@ -128,10 +127,9 @@ export default function SignUpPage() {
             autoComplete="new-password"
           />
           {fieldErrors.passwordConfirm && (
-            <p className="mt-1 flex items-center gap-1 text-body-12 text-error" role="alert">
-              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+            <NoticeBox variant="error" className="mt-1">
               {fieldErrors.passwordConfirm}
-            </p>
+            </NoticeBox>
           )}
         </div>
         <div>
@@ -149,17 +147,15 @@ export default function SignUpPage() {
             autoComplete="username"
           />
           {fieldErrors.nickname && (
-            <p className="mt-1 flex items-center gap-1 text-body-12 text-error" role="alert">
-              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+            <NoticeBox variant="error" className="mt-1">
               {fieldErrors.nickname}
-            </p>
+            </NoticeBox>
           )}
         </div>
         {submitError && (
-          <p className="flex items-center gap-1 text-body-14 text-error" role="alert">
-            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+          <NoticeBox variant="error">
             {submitError}
-          </p>
+          </NoticeBox>
         )}
         <button
           type="submit"

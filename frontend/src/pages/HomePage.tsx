@@ -1,7 +1,7 @@
 import { type ReactNode, useEffect, useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query'
-import { Carrot, MapPin, User } from 'lucide-react'
+import { Carrot, MapPin, User, MessageCircle, Heart } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { locationsApi } from '../api/locations'
 import { postsApi, PostListItem } from '../api/posts'
@@ -9,6 +9,7 @@ import ImageWithFallback from '../components/ImageWithFallback'
 import PostListSkeleton from '../components/PostListSkeleton'
 import Spinner from '../components/Spinner'
 import EmptyState from '../components/EmptyState'
+import NoticeBox from '../components/NoticeBox'
 import { formatPrice } from '../utils/format'
 import { STATUS_LABEL } from '../constants/post'
 
@@ -162,7 +163,9 @@ export default function HomePage() {
             <PostListSkeleton count={6} />
           )}
           {error && (
-            <div className="py-8 text-center text-body-14 text-error">{error}</div>
+            <div className="py-4">
+              <NoticeBox variant="error">{error}</NoticeBox>
+            </div>
           )}
           {!loading && !error && posts.length === 0 && (
             <EmptyState
@@ -246,6 +249,16 @@ function PostCard({ post, keyword }: { post: PostListItem; keyword?: string }) {
           {post.locationName && <span>{post.locationName}</span>}
           <span>·</span>
           <span>{STATUS_LABEL[post.status] ?? post.status}</span>
+        </div>
+        <div className="flex items-center gap-3 mt-1.5 text-body-12 text-gray-60">
+          <span className="flex items-center gap-0.5">
+            <MessageCircle className="w-3.5 h-3.5" aria-hidden />
+            <span>{post.chatCount ?? 0}</span>
+          </span>
+          <span className="flex items-center gap-0.5">
+            <Heart className="w-3.5 h-3.5" aria-hidden />
+            <span>{post.favoriteCount ?? 0}</span>
+          </span>
         </div>
       </div>
       </Link>

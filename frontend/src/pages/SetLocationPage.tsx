@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { locationsApi, type LocationItem } from '../api/locations'
 import { getApiErrorMessage } from '../utils/apiError'
 import LocationSelect from '../components/LocationSelect'
+import NoticeBox from '../components/NoticeBox'
 
 export default function SetLocationPage() {
   const [locationCode, setLocationCode] = useState('')
@@ -69,9 +70,9 @@ export default function SetLocationPage() {
           />
         </div>
         {error && (
-          <p className="text-body-14 text-error mb-4" role="alert">
+          <NoticeBox variant="error" className="mb-4">
             {error}
-          </p>
+          </NoticeBox>
         )}
         <button
           type="button"

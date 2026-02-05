@@ -5,6 +5,7 @@ import { postsApi, PostListItem } from '../api/posts'
 import ImageWithFallback from '../components/ImageWithFallback'
 import PostListSkeleton from '../components/PostListSkeleton'
 import EmptyState from '../components/EmptyState'
+import NoticeBox from '../components/NoticeBox'
 import { formatPrice } from '../utils/format'
 import { STATUS_LABEL } from '../constants/post'
 
@@ -51,7 +52,9 @@ export default function MyPostsPage() {
         {loading && <PostListSkeleton count={5} />}
         {error && (
           <div className="py-8 px-4 text-center">
-            <p className="text-body-14 text-error mb-3">{error}</p>
+            <NoticeBox variant="error" className="mb-3">
+              {error}
+            </NoticeBox>
             <button
               type="button"
               onClick={fetchList}

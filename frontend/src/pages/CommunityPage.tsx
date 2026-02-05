@@ -7,6 +7,7 @@ import { communityApi, type CommunityPostListItem } from '../api/community'
 import { COMMUNITY_TOPIC_FILTER_OPTIONS } from '../constants/community'
 import EmptyState from '../components/EmptyState'
 import Spinner from '../components/Spinner'
+import NoticeBox from '../components/NoticeBox'
 import { formatRelativeTime } from '../utils/format'
 
 const PAGE_SIZE = 20
@@ -157,7 +158,9 @@ export default function CommunityPage() {
         )}
         {error && (
           <div className="py-8 px-4 text-center">
-            <p className="text-body-14 text-error mb-3">{error}</p>
+            <NoticeBox variant="error" className="mb-3">
+              {error}
+            </NoticeBox>
             <button
               type="button"
               onClick={fetchList}

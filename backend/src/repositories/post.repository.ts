@@ -15,6 +15,8 @@ interface PostListRow {
   created_at: Date;
   view_count: number;
   user_nickname: string;
+  chat_count: number;
+  favorite_count: number;
 }
 
 export const postRepository = {
@@ -54,7 +56,9 @@ export const postRepository = {
     const offsetNum = Number(offset) || 0;
     const listSql = `
       SELECT p.id, p.title, p.price, p.status, p.category, p.location_name, p.image_urls,
-             p.created_at, p.view_count, u.nickname AS user_nickname
+             p.created_at, p.view_count, u.nickname AS user_nickname,
+             (SELECT COUNT(*) FROM chat_rooms cr WHERE cr.post_id = p.id) AS chat_count,
+             (SELECT COUNT(*) FROM favorites f WHERE f.post_id = p.id) AS favorite_count
       FROM ${TABLE} p
       INNER JOIN users u ON p.user_id = u.id
       WHERE ${whereClause}
@@ -71,7 +75,9 @@ export const postRepository = {
     const placeholders = postIds.map(() => '?').join(',');
     const sql = `
       SELECT p.id, p.title, p.price, p.status, p.category, p.location_name, p.image_urls,
-             p.created_at, p.view_count, u.nickname AS user_nickname
+             p.created_at, p.view_count, u.nickname AS user_nickname,
+             (SELECT COUNT(*) FROM chat_rooms cr WHERE cr.post_id = p.id) AS chat_count,
+             (SELECT COUNT(*) FROM favorites f WHERE f.post_id = p.id) AS favorite_count
       FROM ${TABLE} p
       INNER JOIN users u ON p.user_id = u.id
       WHERE p.id IN (${placeholders})

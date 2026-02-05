@@ -1,7 +1,7 @@
 import { type ReactNode, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { ArrowLeft, ChevronRight, MessageSquare, Search, X } from 'lucide-react'
+import { ArrowLeft, ChevronRight, MessageCircle, MessageSquare, Heart, Search, X } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { postsApi, PostListItem } from '../api/posts'
 import { communityApi, type CommunityPostListItem } from '../api/community'
@@ -63,6 +63,16 @@ function PostCard({ post, keyword }: { post: PostListItem; keyword?: string }) {
             {post.locationName && <span>{post.locationName}</span>}
             <span>·</span>
             <span>{STATUS_LABEL[post.status] ?? post.status}</span>
+          </div>
+          <div className="flex items-center gap-3 mt-1.5 text-body-12 text-gray-60">
+            <span className="flex items-center gap-0.5">
+              <MessageCircle className="w-3.5 h-3.5" aria-hidden />
+              <span>{post.chatCount ?? 0}</span>
+            </span>
+            <span className="flex items-center gap-0.5">
+              <Heart className="w-3.5 h-3.5" aria-hidden />
+              <span>{post.favoriteCount ?? 0}</span>
+            </span>
           </div>
         </div>
       </button>

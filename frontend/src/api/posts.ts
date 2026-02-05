@@ -13,6 +13,10 @@ export interface PostListItem {
   createdAt: string
   viewCount: number
   userNickname: string
+  /** 해당 게시글에 생긴 채팅방 개수 */
+  chatCount: number
+  /** 해당 게시글 찜 개수 */
+  favoriteCount: number
 }
 
 export interface PostListResponse {
