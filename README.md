@@ -91,6 +91,46 @@ npm run dev
 
 - 웹 앱: http://localhost:5173
 
+## Capacitor Android 앱
+
+웹 프로젝트를 Capacitor로 감싸 Android 앱으로 빌드할 수 있습니다.
+
+**사전 요구사항:** Android Studio, JDK 17+
+
+### 초기 설정 (이미 완료된 상태)
+
+- `frontend`에 `@capacitor/core`, `@capacitor/cli`, `@capacitor/android` 설치됨
+- `frontend/capacitor.config.ts`: 앱 ID `com.danggeun.clone`, 앱 이름 `당근마켓 클론`, 웹 빌드 결과물 `dist`
+- `frontend/android/`: 네이티브 Android 프로젝트
+
+### Android 앱 빌드·실행
+
+```bash
+cd frontend
+npm run build          # 웹 빌드 (dist 생성)
+npx cap sync           # dist 내용을 android/assets로 복사
+npx cap open android   # Android Studio에서 열기
+```
+
+Android Studio에서 **Run**으로 에뮬레이터 또는 실기기에서 실행합니다.
+
+### 실기기/에뮬레이터에서 API 연결
+
+앱에서 백엔드 API를 쓰려면 `capacitor.config.ts`의 `server.url`을 설정합니다.
+
+- **에뮬레이터**: `http://10.0.2.2:3001` (Android 에뮬레이터의 localhost)
+- **실기기**: PC와 같은 Wi‑Fi의 IP 사용 (예: `http://192.168.0.10:3001`)
+
+설정 후 `npx cap sync` 한 번 더 실행한 뒤 앱을 다시 빌드하세요.
+
+### 프론트엔드 Capacitor 스크립트
+
+| 스크립트 | 설명 |
+|---------|------|
+| `npm run cap:sync` | `dist` → Android/iOS 프로젝트로 동기화 |
+| `npm run cap:android` | Android 플랫폼 추가 (이미 추가됨) |
+| `npm run cap:open:android` | Android Studio에서 android 프로젝트 열기 |
+
 ## API 목록
 
 ### 인증

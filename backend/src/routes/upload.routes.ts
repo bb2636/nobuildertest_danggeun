@@ -37,7 +37,7 @@ router.post(
   '/',
   authMiddleware,
   upload.single('image'),
-  (req: AuthRequest, res) => {
+  (req: AuthRequest, res: Response) => {
     if (!req.file) {
       res.status(400).json({ message: '이미지 파일을 선택해주세요.' });
       return;

@@ -1,0 +1,1 @@
+{"version":3,"file":"notifications.routes.js","sourceRoot":"","sources":["../../src/routes/notifications.routes.ts"],"names":[],"mappings":";;AAAA,qCAAiC;AACjC,mEAA+D;AAC/D,sFAAkF;AAElF,MAAM,MAAM,GAAG,IAAA,gBAAM,GAAE,CAAC;AAExB,MAAM,CAAC,GAAG,CAAC,SAAS,EAAE,gCAAc,EAAE,CAAC,GAAG,EAAE,GAAG,EAAE,EAAE,CACjD,kDAAuB,CAAC,SAAS,CAAC,GAAG,EAAE,GAAG,CAAC,CAC5C,CAAC;AAEF,kBAAe,MAAM,CAAC"}

@@ -1,0 +1,1 @@
+{"version":3,"file":"favorite.validator.js","sourceRoot":"","sources":["../../src/validators/favorite.validator.ts"],"names":[],"mappings":";;;AAAA,yDAA0C;AAE7B,QAAA,oBAAoB,GAAG;IAClC,IAAA,yBAAK,EAAC,QAAQ,CAAC;SACZ,KAAK,CAAC,EAAE,GAAG,EAAE,CAAC,EAAE,CAAC;SACjB,WAAW,CAAC,mBAAmB,CAAC;CACpC,CAAC"}

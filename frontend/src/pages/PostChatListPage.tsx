@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, MessageCircle } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'

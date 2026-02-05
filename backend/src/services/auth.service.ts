@@ -37,8 +37,8 @@ export const authService = {
     if (!user) throw new Error('회원가입 후 사용자 조회 실패');
     const accessToken = jwt.sign(
       { userId: user.id, email: user.email } as JwtPayload,
-      config.jwt.secret,
-      { expiresIn: config.jwt.expiresIn }
+      config.jwt.secret as jwt.Secret,
+      { expiresIn: config.jwt.expiresIn as jwt.SignOptions['expiresIn'] }
     );
     return {
       user: {
@@ -69,8 +69,8 @@ export const authService = {
     }
     const accessToken = jwt.sign(
       { userId: user.id, email: user.email } as JwtPayload,
-      config.jwt.secret,
-      { expiresIn: config.jwt.expiresIn }
+      config.jwt.secret as jwt.Secret,
+      { expiresIn: config.jwt.expiresIn as jwt.SignOptions['expiresIn'] }
     );
     return {
       user: {

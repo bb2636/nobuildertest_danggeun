@@ -30,7 +30,7 @@ export default function HomePage() {
   const { user } = useAuth()
   const [locationCode, setLocationCode] = useState('')
   const [category, setCategory] = useState('')
-  const [keyword, setKeyword] = useState('')
+  const [keyword] = useState('')
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
   const { data: locationsData } = useQuery({

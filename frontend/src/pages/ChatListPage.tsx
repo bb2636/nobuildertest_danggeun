@@ -8,7 +8,6 @@ import { getChatSocket } from '../lib/socket'
 import { useSocketConnectionBanner } from '../hooks/useSocketConnectionBanner'
 import ImageWithFallback from '../components/ImageWithFallback'
 import Spinner from '../components/Spinner'
-import EmptyState from '../components/EmptyState'
 import { formatPrice, formatRelativeTime } from '../utils/format'
 import { toAbsoluteImageUrl } from '../utils/image'
 

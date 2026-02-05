@@ -1,0 +1,1 @@
+{"version":3,"file":"favorite.repository.d.ts","sourceRoot":"","sources":["../../src/repositories/favorite.repository.ts"],"names":[],"mappings":"AAIA,eAAO,MAAM,kBAAkB;gBACX,MAAM,UAAU,MAAM,GAAG,OAAO,CAAC,OAAO,CAAC;mBAYtC,MAAM,UAAU,MAAM,GAAG,OAAO,CAAC,OAAO,CAAC;mBASzC,MAAM,UAAU,MAAM,GAAG,OAAO,CAAC,OAAO,CAAC;gCAQ5B,MAAM,GAAG,OAAO,CAAC,MAAM,EAAE,CAAC;CAQ7D,CAAC"}

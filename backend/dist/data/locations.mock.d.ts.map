@@ -1,0 +1,1 @@
+{"version":3,"file":"locations.mock.d.ts","sourceRoot":"","sources":["../../src/data/locations.mock.ts"],"names":[],"mappings":"AAAA;;;GAGG;AACH,MAAM,WAAW,YAAY;IAC3B,IAAI,EAAE,MAAM,CAAC;IACb,IAAI,EAAE,MAAM,CAAC;IACb,QAAQ,CAAC,EAAE,MAAM,CAAC;CACnB;AAED,eAAO,MAAM,cAAc,EAAE,YAAY,EAgCxC,CAAC"}

@@ -183,8 +183,6 @@ export default function SearchPage() {
 
   const postsPreview = posts.slice(0, PREVIEW_SIZE)
   const communityPreview = communityPosts.slice(0, PREVIEW_SIZE)
-  const postsTotal = postsQuery.data?.pages[0]?.total ?? 0
-  const communityTotal = communityQuery.data?.pages[0]?.total ?? 0
 
   const loading = hasSearched && (postsQuery.isLoading || communityQuery.isLoading)
   const anyResults = posts.length > 0 || communityPosts.length > 0

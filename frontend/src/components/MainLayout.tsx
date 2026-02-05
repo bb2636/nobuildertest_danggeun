@@ -23,10 +23,6 @@ export default function MainLayout() {
   const { token } = useAuth()
   const isHome = location.pathname === '/'
   const isCommunityList = location.pathname === '/community'
-  const isCommunity =
-    location.pathname === '/community' ||
-    (location.pathname.startsWith('/community/') &&
-      !/^\/community\/(new|\d+\/edit)$/.test(location.pathname))
 
   const { data: counts } = useQuery({
     queryKey: ['notifications', 'counts'],
@@ -83,7 +79,9 @@ export default function MainLayout() {
         style={{ height: NAV_HEIGHT }}
         aria-label="메인 메뉴"
       >
-        {tabs.map(({ path, label, icon: Icon, badgeKey }) => {
+        {tabs.map((tab) => {
+          const { path, label, icon: Icon } = tab
+          const badgeKey = 'badgeKey' in tab ? tab.badgeKey : undefined
           const isActive =
             path === '/'
               ? location.pathname === '/'

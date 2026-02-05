@@ -1,0 +1,37 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MOCK_LOCATIONS = void 0;
+exports.MOCK_LOCATIONS = [
+    { code: '6035', name: '역삼동', fullName: '서울 강남구 역삼동' },
+    { code: '6543', name: '송도동', fullName: '인천 연수구 송도동' },
+    { code: '6128', name: '서초동', fullName: '서울 서초구 서초동' },
+    { code: '355', name: '신림동', fullName: '서울 관악구 신림동' },
+    { code: '386', name: '청담동', fullName: '서울 강남구 청담동' },
+    { code: '385', name: '압구정동', fullName: '서울 강남구 압구정동' },
+    { code: '6052', name: '마곡동', fullName: '서울 강서구 마곡동' },
+    { code: '4470', name: '다산동', fullName: '경기 남양주시 다산동' },
+    { code: '1604', name: '별내동', fullName: '경기 남양주시 별내동' },
+    { code: '2292', name: '불당동', fullName: '충남 천안시 서북구 불당동' },
+    { code: '4656', name: '옥정동', fullName: '경기 양주시 옥정동' },
+    { code: '4245', name: '배곧동', fullName: '경기 시흥시 배곧동' },
+    { code: '1101', name: '종로동', fullName: '서울 종로구 종로동' },
+    { code: '2101', name: '명동', fullName: '서울 중구 명동' },
+    { code: '3101', name: '용산동', fullName: '서울 용산구 용산동' },
+    { code: '4101', name: '성북동', fullName: '서울 성북구 성북동' },
+    { code: '5101', name: '광나루동', fullName: '서울 강동구 광나루동' },
+    { code: '7101', name: '잠실동', fullName: '서울 송파구 잠실동' },
+    { code: '8101', name: '화양동', fullName: '서울 광진구 화양동' },
+    { code: '9101', name: '왕십리동', fullName: '서울 성동구 왕십리동' },
+    { code: '10101', name: '이태원동', fullName: '서울 용산구 이태원동' },
+    { code: '11101', name: '홍제동', fullName: '서울 마포구 홍제동' },
+    { code: '12101', name: '연남동', fullName: '서울 마포구 연남동' },
+    { code: '13101', name: '목동', fullName: '서울 양천구 목동' },
+    { code: '14101', name: '개봉동', fullName: '서울 구로구 개봉동' },
+    { code: '15101', name: '영등포동', fullName: '서울 영등포구 영등포동' },
+    { code: '16101', name: '구로동', fullName: '서울 구로구 구로동' },
+    { code: '17101', name: '신도림동', fullName: '서울 구로구 신도림동' },
+    { code: '18101', name: '당산동', fullName: '서울 영등포구 당산동' },
+    { code: '19101', name: '염창동', fullName: '서울 강서구 염창동' },
+    { code: '20101', name: '가양동', fullName: '서울 강서구 가양동' },
+];
+//# sourceMappingURL=locations.mock.js.map

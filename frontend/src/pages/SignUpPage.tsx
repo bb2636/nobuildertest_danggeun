@@ -51,11 +51,6 @@ export default function SignUpPage() {
     }
   }
 
-  const handleLocationChange = (code: string, name: string) => {
-    setLocationCode(code)
-    setLocationName(name)
-  }
-
   const inputClass =
     'w-full h-12 px-4 rounded-lg border border-gray-20 text-body-16 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-point-0 focus:border-transparent'
   const errorBorder = 'border-error focus:ring-error'

@@ -107,7 +107,7 @@ export const communityRepository = {
 
   async update(id: number, data: { title?: string; content?: string | null; topic?: string | null }): Promise<boolean> {
     const updates: string[] = [];
-    const values: (string | number)[] = [];
+    const values: (string | number | null)[] = [];
     if (data.title !== undefined) {
       updates.push('title = ?');
       values.push(data.title);
