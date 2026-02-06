@@ -21,7 +21,11 @@ exports.createCommunityPostValidator = [
         .withMessage('제목은 필수입니다.')
         .isLength({ max: 200 })
         .withMessage('제목은 200자 이하여야 합니다.'),
-    (0, express_validator_1.body)('content').optional().trim(),
+    (0, express_validator_1.body)('content')
+        .optional()
+        .trim()
+        .isLength({ max: 2000 })
+        .withMessage('내용은 2000자 이하여야 합니다.'),
     (0, express_validator_1.body)('topic').optional().trim().isLength({ max: 50 }),
     (0, express_validator_1.body)('locationName').optional().trim().isLength({ max: 100 }),
     (0, express_validator_1.body)('locationCode').optional().trim().isLength({ max: 20 }),
@@ -29,7 +33,7 @@ exports.createCommunityPostValidator = [
 exports.updateCommunityPostValidator = [
     (0, express_validator_1.param)('id').isInt({ min: 1 }).withMessage('올바른 게시글 ID가 아닙니다.'),
     (0, express_validator_1.body)('title').optional().trim().isLength({ max: 200 }),
-    (0, express_validator_1.body)('content').optional().trim(),
+    (0, express_validator_1.body)('content').optional().trim().isLength({ max: 2000 }),
     (0, express_validator_1.body)('topic').optional().trim().isLength({ max: 50 }),
 ];
 exports.createCommentValidator = [

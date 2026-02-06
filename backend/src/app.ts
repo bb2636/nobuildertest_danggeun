@@ -27,13 +27,11 @@ if (!fs.existsSync(config.upload.dir)) {
 }
 
 const corsOptions: cors.CorsOptions = {
-  credentials: true,
-  origin:
-    config.isProduction && config.cors.allowedOrigins.length > 0
-      ? config.cors.allowedOrigins
-      : config.isProduction
-        ? false
-        : true,
+  // 모든 기기에서 접속 가능 (모바일 WebView origin: null / capacitor:// 대응)
+  origin: '*',
+  credentials: false,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
 app.use(cors(corsOptions));
@@ -67,7 +65,11 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/search', searchRoutes);
 
-app.use('/uploads', express.static(path.resolve(config.upload.dir)));
+// /uploads 이미지 요청에 CORS 헤더 명시 (모바일 앱 fetch 이미지 로드용)
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  next();
+}, express.static(path.resolve(config.upload.dir)));
 
 app.get('/health', async (_req, res) => {
   const dbOk = await ping();

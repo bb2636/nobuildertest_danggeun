@@ -10,11 +10,20 @@ exports.createPostValidator = [
         .withMessage('제목은 필수입니다.')
         .isLength({ max: 100 })
         .withMessage('제목은 100자 이하여야 합니다.'),
-    (0, express_validator_1.body)('content').optional().trim(),
+    (0, express_validator_1.body)('content')
+        .optional()
+        .trim()
+        .isLength({ max: 2000 })
+        .withMessage('설명은 2000자 이하여야 합니다.'),
     (0, express_validator_1.body)('price')
         .optional({ values: 'null' })
-        .custom((v) => v == null || (Number.isInteger(Number(v)) && Number(v) >= 0))
-        .withMessage('가격은 0 이상의 정수이거나 비어 있어야 합니다.'),
+        .custom((v) => {
+        if (v == null || v === '')
+            return true;
+        const n = Number(v);
+        return Number.isInteger(n) && n >= 0 && n <= 999999999999;
+    })
+        .withMessage('가격은 0원 이상, 최대 12자리(999,999,999,999원)까지 입력할 수 있습니다.'),
     (0, express_validator_1.body)('status')
         .optional()
         .isIn(STATUS_VALUES)
@@ -22,20 +31,39 @@ exports.createPostValidator = [
     (0, express_validator_1.body)('category').optional().trim().isLength({ max: 50 }),
     (0, express_validator_1.body)('locationName').optional().trim().isLength({ max: 100 }),
     (0, express_validator_1.body)('locationCode').optional().trim().isLength({ max: 20 }),
-    (0, express_validator_1.body)('imageUrls').optional().isArray().withMessage('imageUrls는 배열이어야 합니다.'),
-    (0, express_validator_1.body)('imageUrls.*').optional().isString().isURL().withMessage('imageUrls 항목은 URL 문자열이어야 합니다.'),
+    (0, express_validator_1.body)('imageUrls')
+        .optional({ values: 'null' })
+        .isArray()
+        .withMessage('imageUrls는 배열이어야 합니다.'),
+    (0, express_validator_1.body)('imageUrls.*')
+        .optional()
+        .isString()
+        .custom((v) => {
+        if (!v || typeof v !== 'string')
+            return true;
+        // 전체 URL(http/https) 또는 서버 내 경로(/로 시작) 허용
+        return v.startsWith('http://') || v.startsWith('https://') || v.startsWith('/');
+    })
+        .withMessage('imageUrls 항목은 URL 또는 경로(/) 문자열이어야 합니다.'),
 ];
 exports.updatePostValidator = [
     (0, express_validator_1.param)('id').isInt({ min: 1 }).withMessage('올바른 게시글 ID가 아닙니다.'),
     (0, express_validator_1.body)('title').optional().trim().isLength({ max: 100 }),
-    (0, express_validator_1.body)('content').optional().trim(),
-    (0, express_validator_1.body)('price').optional().isInt({ min: 0 }),
+    (0, express_validator_1.body)('content').optional().trim().isLength({ max: 2000 }),
+    (0, express_validator_1.body)('price').optional().isInt({ min: 0, max: 999999999999 }).withMessage('가격은 0원 이상, 최대 12자리까지 입력할 수 있습니다.'),
     (0, express_validator_1.body)('status').optional().isIn(STATUS_VALUES),
     (0, express_validator_1.body)('category').optional().trim().isLength({ max: 50 }),
     (0, express_validator_1.body)('locationName').optional().trim().isLength({ max: 100 }),
     (0, express_validator_1.body)('locationCode').optional().trim().isLength({ max: 20 }),
-    (0, express_validator_1.body)('imageUrls').optional().isArray(),
-    (0, express_validator_1.body)('imageUrls.*').optional().isString(),
+    (0, express_validator_1.body)('imageUrls').optional({ values: 'null' }).isArray(),
+    (0, express_validator_1.body)('imageUrls.*')
+        .optional()
+        .isString()
+        .custom((v) => {
+        if (!v || typeof v !== 'string')
+            return true;
+        return v.startsWith('http://') || v.startsWith('https://') || v.startsWith('/');
+    }),
 ];
 exports.postIdParamValidator = [
     (0, express_validator_1.param)('id').isInt({ min: 1 }).withMessage('올바른 게시글 ID가 아닙니다.'),

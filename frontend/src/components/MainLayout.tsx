@@ -47,18 +47,21 @@ export default function MainLayout() {
   }, [token, queryClient])
 
   return (
-    <div className="min-h-screen flex flex-col pb-16">
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ paddingBottom: 'calc(4rem + var(--nav-safe-bottom, 32px))' }}
+    >
       <main className="flex-1" role="main">
         <ErrorBoundary>
           <Outlet />
         </ErrorBoundary>
       </main>
-      {/* 홈: 중고상품 등록 / 동네생활: 게시글 등록 - 동일 위치·크기 (메뉴바 바로 위 오른쪽) */}
+      {/* 홈: 중고상품 등록 / 동네생활: 게시글 등록 - 메뉴바 바로 위 오른쪽 */}
       {isHome && (
         <Link
           to="/posts/new"
           className="fixed right-4 z-20 w-14 h-14 rounded-full bg-point-0 text-white flex items-center justify-center shadow-lg hover:bg-point-0/90 active:scale-95 transition-all"
-          style={{ bottom: NAV_HEIGHT + 8 }}
+          style={{ bottom: `calc(${NAV_HEIGHT}px + var(--nav-safe-bottom, 32px) + 8px)` }}
           aria-label="글쓰기"
         >
           <Plus className="w-7 h-7" strokeWidth={2.5} />
@@ -68,15 +71,19 @@ export default function MainLayout() {
         <Link
           to="/community/new"
           className="fixed right-4 z-20 w-14 h-14 rounded-full bg-point-0 text-white flex items-center justify-center shadow-lg hover:bg-point-0/90 active:scale-95 transition-all"
-          style={{ bottom: NAV_HEIGHT + 8 }}
+          style={{ bottom: `calc(${NAV_HEIGHT}px + var(--nav-safe-bottom, 32px) + 8px)` }}
           aria-label="동네생활 글쓰기"
         >
           <Plus className="w-7 h-7" strokeWidth={2.5} />
         </Link>
       )}
       <nav
-        className="fixed bottom-0 left-0 right-0 max-w-mobile mx-auto bg-white border-t border-gray-10 flex justify-around py-2 safe-area-pb z-10"
-        style={{ height: NAV_HEIGHT }}
+        className="fixed bottom-0 left-0 right-0 max-w-mobile mx-auto bg-white border-t border-gray-10 flex justify-around py-2 z-10"
+        style={{
+          height: NAV_HEIGHT,
+          paddingBottom: 'var(--nav-safe-bottom, 32px)',
+          boxSizing: 'content-box',
+        }}
         aria-label="메인 메뉴"
       >
         {tabs.map((tab) => {

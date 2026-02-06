@@ -13,6 +13,16 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 6;
 exports.authService = {
     async signUp(params) {
+        if (!EMAIL_REGEX.test(params.email)) {
+            const error = new Error('올바른 이메일 형식이 아닙니다.');
+            error.statusCode = 400;
+            throw error;
+        }
+        if (params.password.length < MIN_PASSWORD_LENGTH) {
+            const error = new Error('비밀번호는 6자 이상이어야 합니다.');
+            error.statusCode = 400;
+            throw error;
+        }
         const existing = await user_repository_1.userRepository.findByEmail(params.email);
         if (existing) {
             const error = new Error('이미 사용 중인 이메일입니다.');

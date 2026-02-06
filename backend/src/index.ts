@@ -10,19 +10,15 @@ const PORT = config.server.port;
 
 const io = new SocketServer(server, {
   cors: {
-    origin:
-      config.isProduction && config.cors.allowedOrigins.length > 0
-        ? config.cors.allowedOrigins
-        : config.isProduction
-          ? false
-          : true,
-    credentials: true,
+    origin: '*', // 모바일 WebView 등 모든 origin 허용
+    credentials: false,
   },
   path: '/socket.io',
 });
 setupSocket(io);
 app.set('io', io);
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`[backend] Server running at http://localhost:${PORT} (NODE_ENV=${config.env})`);
+  console.log(`[backend] LAN 접속: http://<본인IP>:${PORT} (예: http://172.30.1.71:${PORT})`);
 });

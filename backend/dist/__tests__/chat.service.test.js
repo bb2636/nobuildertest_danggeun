@@ -74,7 +74,7 @@ describe('chatService', () => {
             chatRepository.isMember.mockResolvedValue(true);
             chatRepository.createMessage.mockResolvedValue(100);
             const result = await chat_service_1.chatService.sendMessage(1, 1, '안녕');
-            expect(chatRepository.createMessage).toHaveBeenCalledWith(1, 1, '안녕');
+            expect(chatRepository.createMessage).toHaveBeenCalledWith(1, 1, '안녕', 'text');
             expect(result).toEqual({ messageId: 100 });
         });
     });

@@ -3,7 +3,9 @@ import { io, Socket } from 'socket.io-client'
 export type SocketConnectionStatus = 'connected' | 'disconnected' | 'error'
 
 const getSocketUrl = () => {
-  const base = import.meta.env.VITE_API_URL || ''
+  const base =
+    import.meta.env.VITE_API_URL ??
+    (import.meta.env.DEV ? '' : 'http://172.30.1.71:3001')
   if (base) return base
   return window.location.origin
 }

@@ -6,8 +6,7 @@ import { locationsApi, type LocationItem } from '../api/locations'
 import { uploadApi } from '../api/upload'
 import ImageWithFallback from '../components/ImageWithFallback'
 import { getApiErrorMessage } from '../utils/apiError'
-
-const API_BASE = import.meta.env.VITE_API_URL || ''
+import { API_BASE } from '../api/client'
 
 export default function ProfilePage() {
   const navigate = useNavigate()

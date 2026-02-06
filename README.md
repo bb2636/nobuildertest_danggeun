@@ -6,7 +6,8 @@
 
 - **Frontend**: React (Vite), TypeScript, Tailwind CSS, Lucide-react, Axios, React Router
 - **Backend**: Node.js (Express), TypeScript
-- **Database**: MySQL 
+- **Database**: MySQL
+- **Android**: Capacitor 8 (웹 래핑), Java 17 호환 
 
 ## 프로젝트 구조
 
@@ -23,9 +24,10 @@ step2/
 │       ├── routes/
 │       ├── data/     # Mock (동네 목록 등)
 │       └── types/
-├── frontend/         # Vite + React
+├── frontend/         # Vite + React, Capacitor Android
+│   ├── android/      # Capacitor 네이티브 Android 프로젝트
 │   └── src/
-│       ├── api/      # Axios 클라이언트
+│       ├── api/      # Axios 클라이언트 (API_BASE, toAbsoluteImageUrl)
 │       ├── contexts/
 │       ├── pages/
 │       └── ...
@@ -91,11 +93,23 @@ npm run dev
 
 - 웹 앱: http://localhost:5173
 
-## Capacitor Android 앱
+## Capacitor Android 앱 (래핑 완료 · 실기기 동작 확인됨)
 
-웹 프로젝트를 Capacitor로 감싸 Android 앱으로 빌드할 수 있습니다.
+웹 프로젝트를 Capacitor로 감싼 Android 앱으로 빌드·실행할 수 있으며, **실기기에서 로그인·회원가입·이미지 로드·채팅 이미지까지 정상 동작**합니다.
 
-**사전 요구사항:** Android Studio, JDK 17+
+**사전 요구사항:** Android Studio, JDK 17+ (Java 21 미설치 시에도 빌드 가능하도록 프로젝트에서 Java 17로 통일됨)
+
+### Android 래핑 작업 요약
+
+| 구분 | 적용 내용 |
+|------|-----------|
+| **빌드** | `frontend/android/build.gradle`: 모든 서브프로젝트 Java 17로 통일 (Java 21 미지원 환경 대응) |
+| **백엔드** | CORS `origin: '*'`, `0.0.0.0` listen, 업로드 응답은 상대 경로 `/uploads/...` 반환. `/uploads` 정적 파일에 CORS 헤더 명시 |
+| **API 주소** | `VITE_API_URL` 없으면 빌드 시 기본 `http://172.30.1.71:3001` 사용. 노트북 IP는 `ipconfig`로 확인 후 `frontend/.env`에 설정 |
+| **네트워크** | `network_security_config.xml`: 172.30.1.71, 172.30.1.82, localhost, 10.0.2.2 등 HTTP(cleartext) 허용 |
+| **앱** | `AndroidManifest`: `usesCleartextTraffic="true"`, `MainActivity`: WebView `MIXED_CONTENT_ALWAYS_ALLOW` (capacitor → http API 요청 허용) |
+| **이미지** | `toAbsoluteImageUrl`: DB의 localhost/127.0.0.1 URL → API_BASE 기준으로 치환. `ImageWithFallback`에서 **API 이미지는 fetch → blob URL**로 표시(WebView img 차단 우회). 채팅 전송 이미지도 동일 컴포넌트 사용 |
+| **UI** | 상단 safe-area는 `#root`에 적용해 스크롤 시 위 빈 공간 없음. 하단 네비는 `--nav-safe-bottom`(32px 이상)으로 시스템 바에 가리지 않음. 폰트 Pretendard(CDN) 적용 |
 
 ### 초기 설정 (이미 완료된 상태)
 
@@ -105,44 +119,54 @@ npm run dev
 
 ### Android 앱 빌드·실행
 
-**방법 1 – frontend 폴더에서 (권장)**
+**권장: frontend 폴더에서 실행**
 
 ```bash
 cd frontend
-npm run build          # 웹 빌드 (dist 생성)
-npx cap sync android   # dist → android/assets 복사
+npm run build       # 웹 빌드 (dist 생성)
+npx cap sync        # dist → android/assets 동기화
 npx cap open android   # Android Studio에서 열기
+# 또는 터미널에서 바로 실행: npx cap run android (frontend 폴더에서)
 ```
 
-**방법 2 – 루트(step2)에서**
-
-```bash
-npm run build --prefix frontend
-npm run cap:sync --prefix frontend
-cd frontend && npx cap open android
-```
-
-> ⚠️ `npx cap sync`는 **frontend**에 Capacitor가 설치되어 있으므로, 루트에서 실행하면 `npm run cap:sync --prefix frontend`처럼 **반드시 frontend 기준**으로 실행하세요.
+> ⚠️ `npx cap run android` / `npx cap sync`는 **반드시 frontend 디렉터리**에서 실행하세요. 루트(step2)에서 실행하면 `npm run build --prefix frontend` 후 `cd frontend && npx cap sync` 처럼 frontend 기준으로 해야 합니다.
 
 Android Studio에서 **Run**으로 에뮬레이터 또는 실기기에서 실행합니다.
 
-### 실기기/에뮬레이터에서 API 연결
+### 실기기에서 API 연결 (같은 Wi‑Fi)
 
-앱에서 백엔드 API를 쓰려면 `capacitor.config.ts`의 `server.url`을 설정합니다.
+1. **노트북 IP 확인**  
+   백엔드를 실행하는 PC에서 `ipconfig`(Windows)로 **IPv4 주소** 확인 (예: 172.30.1.71).
 
-- **에뮬레이터**: `http://10.0.2.2:3001` (Android 에뮬레이터의 localhost)
-- **실기기**: PC와 같은 Wi‑Fi의 IP 사용 (예: `http://192.168.0.10:3001`)
+2. **API 주소 설정**  
+   - `frontend/.env`에 `VITE_API_URL=http://노트북IP:3001` (예: `http://172.30.1.71:3001`)  
+   - 없으면 코드 기본값 `http://172.30.1.71:3001`이 빌드에 들어갑니다. PC IP가 다르면 `.env`로 맞추세요.
 
-설정 후 `npx cap sync android`(또는 `npm run cap:sync --prefix frontend`) 한 번 더 실행한 뒤 앱을 다시 빌드하세요.
+3. **백엔드 실행**  
+   `cd backend && npm run dev` → 3001 포트에서 서버 실행 (LAN 접속을 위해 `0.0.0.0` listen).
 
-**앱에서 API 연결:**  
-API 요청 주소는 `frontend/.env`의 `VITE_API_URL`로 빌드 시 들어갑니다. 에뮬레이터는 `VITE_API_URL=http://10.0.2.2:3001`, 실기기는 같은 Wi‑Fi의 PC IP(예: `http://192.168.0.10:3001`)로 설정한 뒤 `npm run build` → `cap sync` 후 앱을 다시 실행하세요.
+4. **방화벽**  
+   Windows에서 3001 포트 인바운드 허용. (관리자 PowerShell: `New-NetFirewallRule -DisplayName "Node 3001" -Direction Inbound -LocalPort 3001 -Protocol TCP -Action Allow`)
+
+5. **앱 다시 빌드**  
+   `.env` 또는 API 기본값을 바꾼 경우 반드시 `npm run build` → `npx cap sync` 후 앱을 다시 실행해야 합니다.
+
+- **에뮬레이터**: `VITE_API_URL=http://10.0.2.2:3001` 로 설정 후 빌드·sync.
+
+### 트러블슈팅
+
+| 현상 | 확인·조치 |
+|------|-----------|
+| 로그인/회원가입 "서버에 연결할 수 없습니다" | 폰과 노트북이 같은 Wi‑Fi인지, 백엔드 실행 여부, 노트북 IP가 `.env`/기본값과 일치하는지 확인. 방화벽에서 3001 허용. |
+| 이미지 안 나옴 | 앱에서는 API 이미지를 fetch → blob URL로 표시함. DB에 localhost로 저장된 기존 URL도 화면 표시 시 API_BASE로 치환됨. 같은 Wi‑Fi·백엔드 실행·방화벽 확인 후 앱 재빌드. |
+| 하단 메뉴바가 시스템 바에 가림 | `--nav-safe-bottom`(최소 32px) 적용됨. 여전히 가리면 `frontend/src/index.css`에서 32px을 더 키워 보세요. |
+| 맨 위로 스크롤 시 위에 빈 공간 | 상단 safe-area를 `#root`에 두어 스크롤 시 같이 올라가도록 되어 있음. `overscroll-behavior-y: none`으로 bounce 구간 최소화. |
 
 ### 프론트엔드 Capacitor 스크립트
 
 | 스크립트 | 설명 |
 |---------|------|
-| `npm run cap:sync` | `dist` → Android/iOS 프로젝트로 동기화 |
+| `npm run cap:sync` | `dist` → Android 프로젝트로 동기화 (frontend 폴더에서 실행) |
 | `npm run cap:android` | Android 플랫폼 추가 (이미 추가됨) |
 | `npm run cap:open:android` | Android Studio에서 android 프로젝트 열기 |
 
@@ -194,7 +218,7 @@ API 요청 주소는 `frontend/.env`의 `VITE_API_URL`로 빌드 시 들어갑�
 | POST | /api/upload | Bearer | 단일 이미지 업로드 (multipart, field: `image`). 응답: `{ url }` |
 
 - 업로드된 파일은 `uploads/` 디렉터리에 저장되며, `GET /uploads/:filename`으로 제공됩니다.
-- `API_BASE_URL` 환경 변수로 반환 URL 기준 주소를 지정할 수 있습니다.
+- `API_BASE_URL`이 없으면 응답은 상대 경로 `/uploads/:filename`으로 반환되며, 앱에서 `API_BASE`를 붙여 로드합니다. 배포 시 `API_BASE_URL`을 설정하면 절대 URL로 반환할 수 있습니다.
 
 ### 위치 (Mock)
 
@@ -228,6 +252,21 @@ API 요청 주소는 `frontend/.env`의 `VITE_API_URL`로 빌드 시 들어갑�
 - **채팅** (방 생성, 목록, 메시지 조회/전송), **WebSocket 실시간 메시지·채팅 목록 갱신**
 - **이미지 업로드** (글쓰기/수정 시)
 - 동네(위치) 기반 필터링 (Mock 데이터)
-- 모바일 퍼스트 UI (Figma 디자인 시스템 반영)
+- 모바일 퍼스트 UI (Figma 디자인 시스템, Pretendard 폰트)
+- **Android 앱**: Capacitor 래핑, 실기기에서 동일 Wi‑Fi 노트북 백엔드 연결·이미지(목록/채팅) 로드·하단 네비 세이프 영역 · **실기기 동작 확인 완료**
 
 결제 기능은 포함되어 있지 않습니다.
+
+---
+
+## 코드 점검 요약 (Android 래핑 기준)
+
+| 영역 | 파일 | 점검 내용 |
+|------|------|-----------|
+| 백엔드 CORS·Listen | `backend/src/app.ts`, `backend/src/index.ts` | CORS `origin: '*'`, `server.listen(PORT, '0.0.0.0')` |
+| 백엔드 업로드 URL | `backend/src/routes/upload.routes.ts` | `publicBaseUrl` 없을 때 상대 경로 `/uploads/...` 반환 |
+| 프론트 API·이미지 | `frontend/src/api/client.ts`, `frontend/src/utils/image.ts`, `ImageWithFallback.tsx` | `API_BASE` 기본값(모바일용), `toAbsoluteImageUrl`(localhost/상대 → 절대 URL), API 이미지 fetch→blob 표시 |
+| 프론트 레이아웃 | `frontend/src/index.css`, `frontend/src/components/MainLayout.tsx` | `#root`에만 상단 safe-area, 하단 `--nav-safe-bottom`, `overscroll-behavior-y: none` |
+| Android 빌드 | `frontend/android/build.gradle` | 서브프로젝트 Java 17 통일 |
+| Android 네트워크 | `frontend/android/.../network_security_config.xml`, `AndroidManifest.xml` | HTTP(cleartext) 허용 도메인, `usesCleartextTraffic` |
+| Android WebView | `frontend/android/.../MainActivity.java` | `MIXED_CONTENT_ALWAYS_ALLOW` 적용 |

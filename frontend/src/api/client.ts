@@ -1,12 +1,16 @@
 import axios, { type AxiosError } from 'axios'
 import type { ApiErrorResponse } from '../types/api'
 
-const API_BASE = import.meta.env.VITE_API_URL || ''
+// 개발(DEV): 빈 값 → Vite 프록시(localhost:3001). 빌드/앱: 기본 172.30.1.71:3001
+export const API_BASE =
+  import.meta.env.VITE_API_URL ??
+  (import.meta.env.DEV ? '' : 'http://172.30.1.71:3001')
 
 export const api = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
-  withCredentials: true,
+  // 모바일/다른 기기: CORS origin '*' 와 호환 (인증은 Bearer 토큰으로 처리)
+  withCredentials: false,
 })
 
 /** API 에러 타입 (인터셉터/ catch에서 response.data 사용 시) */

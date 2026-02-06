@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Calendar, ChevronDown, ImagePlus, LogOut, Send } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { chatApi, type ChatMessage, type ChatRoomDetail } from '../api/chat'
+import { API_BASE } from '../api/client'
 import { postsApi, type PostStatus } from '../api/posts'
 import { uploadApi } from '../api/upload'
 import { getChatSocket, type ChatMessagePayload } from '../lib/socket'
@@ -175,7 +176,7 @@ export default function ChatRoomPage() {
     setSendError('')
     try {
       const { data } = await uploadApi.uploadImage(file)
-      const url = data.url.startsWith('http') ? data.url : `${import.meta.env.VITE_API_URL ?? ''}${data.url}`
+      const url = data.url.startsWith('http') ? data.url : `${API_BASE}${data.url}`
       const socket = token ? getChatSocket(token) : null
       if (!socket?.connected) {
         setSendError('연결을 기다리는 중입니다.')
@@ -467,14 +468,22 @@ export default function ChatRoomPage() {
                 {!isMe && (
                   <p className="text-body-12 text-gray-60 mb-0.5">{msg.nickname}</p>
                 )}
-                {isImageMessage && (
+                {isImageMessage && (() => {
+                  const imageUrl = toAbsoluteImageUrl(msg.content) ?? msg.content
+                  return (
                   <>
-                    <a href={msg.content} target="_blank" rel="noopener noreferrer" className="block">
-                      <img src={msg.content} alt="전송된 이미지" className="max-w-full max-h-64 rounded object-contain" />
+                    <a href={imageUrl} target="_blank" rel="noopener noreferrer" className="block max-w-full">
+                      <ImageWithFallback
+                        src={imageUrl}
+                        alt="전송된 이미지"
+                        className="max-w-full max-h-64 rounded object-contain"
+                        fallbackText="이미지를 불러올 수 없어요"
+                      />
                     </a>
                     <p className="text-body-12 mt-1 opacity-90">이미지를 보냈습니다.</p>
                   </>
-                )}
+                  )
+                })()}
                 {!isImageMessage && type === 'appointment' && (() => {
                   try {
                     const { date, time, place } = JSON.parse(msg.content) as { date?: string; time?: string; place?: string }

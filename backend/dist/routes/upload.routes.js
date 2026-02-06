@@ -38,8 +38,10 @@ router.post('/', auth_middleware_1.authMiddleware, upload.single('image'), (req,
         res.status(400).json({ message: '이미지 파일을 선택해주세요.' });
         return;
     }
-    const baseUrl = env_1.config.upload.publicBaseUrl || `http://localhost:${env_1.config.server.port}`;
-    const url = `${baseUrl}/uploads/${req.file.filename}`;
+    // 모바일 앱에서 이미지 로드되도록 상대 경로 반환 (프론트에서 API_BASE 붙임). 배포 시 publicBaseUrl 설정하면 절대 URL 반환
+    const url = env_1.config.upload.publicBaseUrl
+        ? `${env_1.config.upload.publicBaseUrl}/uploads/${req.file.filename}`
+        : `/uploads/${req.file.filename}`;
     res.status(201).json({ url });
 }, (err, _req, res, next) => {
     if (err instanceof multer_1.default.MulterError && err.code === 'LIMIT_FILE_SIZE') {

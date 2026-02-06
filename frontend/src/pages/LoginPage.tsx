@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Carrot } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import NoticeBox from '../components/NoticeBox'
-import { getApiErrorMessage } from '../utils/apiError'
+import { API_BASE } from '../api/client'
+import { getApiErrorMessage, getApiErrorDetail } from '../utils/apiError'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -24,7 +25,10 @@ export default function LoginPage() {
       const hasLocation = Boolean(data?.user?.locationName || data?.user?.locationCode)
       navigate(hasLocation ? '/' : '/set-location', { replace: true })
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, '로그인에 실패했습니다.'))
+      const msg = getApiErrorMessage(err, '로그인에 실패했습니다.')
+      const detail = getApiErrorDetail(err)
+      const conn = API_BASE ? `연결 주소: ${API_BASE}` : '연결 주소: (프록시)'
+      setError([msg, detail, conn].filter(Boolean).join('\n'))
     } finally {
       setLoading(false)
     }
@@ -74,7 +78,7 @@ export default function LoginPage() {
           />
         </div>
         {error && (
-          <NoticeBox variant="error">
+          <NoticeBox variant="error" className="whitespace-pre-line">
             {error}
           </NoticeBox>
         )}

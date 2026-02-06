@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Carrot } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import NoticeBox from '../components/NoticeBox'
-import { getApiErrorMessage } from '../utils/apiError'
+import { API_BASE } from '../api/client'
+import { getApiErrorMessage, getApiErrorDetail } from '../utils/apiError'
 
 type FieldError = { email?: string; password?: string; passwordConfirm?: string; nickname?: string }
 
@@ -45,7 +46,10 @@ export default function SignUpPage() {
       })
       navigate('/set-location', { replace: true })
     } catch (err: unknown) {
-      setSubmitError(getApiErrorMessage(err, '회원가입에 실패했습니다.'))
+      const msg = getApiErrorMessage(err, '회원가입에 실패했습니다.')
+      const detail = getApiErrorDetail(err)
+      const conn = API_BASE ? `연결 주소: ${API_BASE}` : '연결 주소: (프록시)'
+      setSubmitError([msg, detail, conn].filter(Boolean).join('\n'))
     } finally {
       setLoading(false)
     }
@@ -147,11 +151,11 @@ export default function SignUpPage() {
             </NoticeBox>
           )}
         </div>
-        {submitError && (
-          <NoticeBox variant="error">
-            {submitError}
-          </NoticeBox>
-        )}
+{submitError && (
+            <NoticeBox variant="error" className="whitespace-pre-line">
+              {submitError}
+            </NoticeBox>
+          )}
         <button
           type="submit"
           disabled={loading}

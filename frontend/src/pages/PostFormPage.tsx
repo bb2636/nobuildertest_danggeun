@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, X, ImagePlus, ChevronDown } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { postsApi, CreatePostBody, PostStatus } from '../api/posts'
+import { API_BASE } from '../api/client'
 import { uploadApi } from '../api/upload'
 import ImageWithFallback from '../components/ImageWithFallback'
 import FieldErrorTooltip from '../components/FieldErrorTooltip'
@@ -179,7 +180,7 @@ export default function PostFormPage() {
         const file = files[i]
         if (!file.type.startsWith('image/')) continue
         const { data } = await uploadApi.uploadImage(file)
-        const url = data.url.startsWith('http') ? data.url : `${import.meta.env.VITE_API_URL ?? ''}${data.url}`
+        const url = data.url.startsWith('http') ? data.url : `${API_BASE}${data.url}`
         setImageUrls((prev) => [...prev, url])
       }
     } catch {
