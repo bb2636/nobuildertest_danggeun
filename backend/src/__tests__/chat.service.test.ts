@@ -82,7 +82,7 @@ describe('chatService', () => {
       (chatRepository.isMember as jest.Mock).mockResolvedValue(true);
       (chatRepository.createMessage as jest.Mock).mockResolvedValue(100);
       const result = await chatService.sendMessage(1, 1, '안녕');
-      expect(chatRepository.createMessage).toHaveBeenCalledWith(1, 1, '안녕');
+      expect(chatRepository.createMessage).toHaveBeenCalledWith(1, 1, '안녕', 'text');
       expect(result).toEqual({ messageId: 100 });
     });
   });

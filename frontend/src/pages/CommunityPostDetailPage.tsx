@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, MapPin, MessageSquare, Send, Eye } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { communityApi, type CommunityPostDetail, type CommunityComment } from '../api/community'
@@ -11,6 +12,7 @@ import { getApiErrorMessage } from '../utils/apiError'
 export default function CommunityPostDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { user, token } = useAuth()
   const [post, setPost] = useState<CommunityPostDetail | null>(null)
   const [comments, setComments] = useState<CommunityComment[]>([])
@@ -127,6 +129,7 @@ export default function CommunityPostDetailPage() {
     setDeleteLoading(true)
     try {
       await communityApi.delete(postId)
+      queryClient.invalidateQueries({ queryKey: ['community'] })
       navigate('/community', { replace: true })
     } catch (err: unknown) {
       setDeleteError(getApiErrorMessage(err, '삭제에 실패했습니다.'))

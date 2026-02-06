@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQueryClient, useQuery, useInfiniteQuery } from '@tanstack/react-query'
 import { MessageSquare, MapPin, Plus, ChevronRight, Flame, Eye } from 'lucide-react'
 import { locationsApi, type LocationItem } from '../api/locations'
 import { communityApi, type CommunityPostListItem } from '../api/community'
@@ -13,20 +13,23 @@ import { formatRelativeTime } from '../utils/format'
 const PAGE_SIZE = 20
 const RECOMMEND_FEED_LIMIT = 3
 
+/** 동네생활 목록 캐시 유효 시간: 이 시간 동안은 탭 전환 시 캐시만 보여 주고 재요청하지 않음. 이후 백그라운드에서 갱신 */
+const COMMUNITY_LIST_STALE_MS = 2 * 60 * 1000
+
 export default function CommunityPage() {
   const queryClient = useQueryClient()
-  const [posts, setPosts] = useState<CommunityPostListItem[]>([])
-  const [locations, setLocations] = useState<LocationItem[]>([])
   const [locationCode, setLocationCode] = useState('')
   const [topic, setTopic] = useState('')
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [loading, setLoading] = useState(true)
-  const [loadingMore, setLoadingMore] = useState(false)
-  const [error, setError] = useState('')
   const loadMoreRef = useRef<HTMLDivElement>(null)
-  const [popularPosts, setPopularPosts] = useState<CommunityPostListItem[]>([])
-  const [popularLoading, setPopularLoading] = useState(false)
+
+  const { data: locationsData } = useQuery({
+    queryKey: ['locations'],
+    queryFn: async () => {
+      const res = await locationsApi.getList()
+      return res.data.locations ?? []
+    },
+  })
+  const locations: LocationItem[] = locationsData ?? []
 
   useEffect(() => {
     communityApi.markNotificationsRead().then(() => {
@@ -34,85 +37,73 @@ export default function CommunityPage() {
     }).catch(() => {})
   }, [queryClient])
 
-  useEffect(() => {
-    locationsApi.getList().then((res) => setLocations(res.data.locations ?? [])).catch(() => {})
-  }, [])
+  const isPopular = topic === 'popular'
+  const isRecommend = topic === ''
+  const listLimit = isRecommend ? RECOMMEND_FEED_LIMIT : PAGE_SIZE
 
-  const fetchList = useCallback(() => {
-    setError('')
-    setLoading(true)
-    const isPopular = topic === 'popular'
-    const isRecommend = topic === ''
-    const limit = isRecommend ? RECOMMEND_FEED_LIMIT : PAGE_SIZE
-    communityApi
-      .getList({
-        page: 1,
-        limit,
+  const {
+    data: listData,
+    isLoading: loading,
+    isError: isListError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage: loadingMore,
+  } = useInfiniteQuery({
+    queryKey: ['community', 'list', locationCode, topic],
+    queryFn: async ({ pageParam }) => {
+      const res = await communityApi.getList({
+        page: pageParam,
+        limit: listLimit,
         locationCode: locationCode || undefined,
         topic: isPopular ? undefined : (topic || undefined),
         sort: isPopular ? 'popular' : 'latest',
       })
-      .then((res) => {
-        setPosts(res.data.posts ?? [])
-        setPage(1)
-        setTotalPages(res.data.totalPages ?? 1)
-      })
-      .catch(() => setError('동네생활 글을 불러오지 못했습니다.'))
-      .finally(() => setLoading(false))
-  }, [locationCode, topic])
+      return res.data
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
+    staleTime: COMMUNITY_LIST_STALE_MS,
+    refetchOnWindowFocus: false,
+  })
 
-  useEffect(() => {
-    fetchList()
-  }, [fetchList])
+  const rawPosts: CommunityPostListItem[] = listData?.pages.flatMap((p) => p.posts) ?? []
+  const posts = useMemo(() => {
+    const map = new Map<number, CommunityPostListItem>()
+    for (const p of rawPosts) map.set(p.id, p)
+    return Array.from(map.values())
+  }, [rawPosts])
+  const error = isListError ? '동네생활 글을 불러오지 못했습니다.' : ''
 
-  useEffect(() => {
-    if (topic !== '') return
-    setPopularLoading(true)
-    communityApi
-      .getList({
+  const { data: popularData, isLoading: popularLoading } = useQuery({
+    queryKey: ['community', 'popular-strip', locationCode],
+    queryFn: async () => {
+      const res = await communityApi.getList({
         page: 1,
         limit: 10,
         locationCode: locationCode || undefined,
         sort: 'popular',
       })
-      .then((res) => setPopularPosts(res.data.posts ?? []))
-      .catch(() => setPopularPosts([]))
-      .finally(() => setPopularLoading(false))
-  }, [topic, locationCode])
-
-  const loadMore = useCallback(() => {
-    if (loadingMore || page >= totalPages) return
-    setLoadingMore(true)
-    const nextPage = page + 1
-    const isPopular = topic === 'popular'
-    communityApi
-      .getList({
-        page: nextPage,
-        limit: PAGE_SIZE,
-        locationCode: locationCode || undefined,
-        topic: isPopular ? undefined : (topic || undefined),
-        sort: isPopular ? 'popular' : 'latest',
-      })
-      .then((res) => {
-        setPosts((prev) => [...prev, ...(res.data.posts ?? [])])
-        setPage(nextPage)
-        setTotalPages(res.data.totalPages ?? 1)
-      })
-      .finally(() => setLoadingMore(false))
-  }, [page, totalPages, loadingMore, locationCode, topic])
+      return res.data.posts ?? []
+    },
+    enabled: isRecommend,
+    staleTime: COMMUNITY_LIST_STALE_MS,
+    refetchOnWindowFocus: false,
+  })
+  const popularPosts: CommunityPostListItem[] = popularData ?? []
 
   useEffect(() => {
     const el = loadMoreRef.current
-    if (!el) return
+    if (!el || !hasNextPage || loadingMore) return
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) loadMore()
+        if (entries[0]?.isIntersecting) fetchNextPage()
       },
       { rootMargin: '100px', threshold: 0 }
     )
     observer.observe(el)
     return () => observer.disconnect()
-  }, [loadMore])
+  }, [fetchNextPage, hasNextPage, loadingMore])
 
   return (
     <div className="min-h-screen bg-grey-50 flex flex-col">
@@ -163,7 +154,7 @@ export default function CommunityPage() {
             </NoticeBox>
             <button
               type="button"
-              onClick={fetchList}
+              onClick={() => queryClient.invalidateQueries({ queryKey: ['community', 'list'] })}
               className="px-4 py-2 rounded-lg bg-point-0 text-white text-body-14 font-medium"
             >
               다시 시도
@@ -243,7 +234,7 @@ export default function CommunityPage() {
                     <span className="text-body-14 text-gray-60">더 불러오는 중...</span>
                   </>
                 )}
-                {!loadingMore && page >= totalPages && posts.length > 0 && (
+                {!loadingMore && !hasNextPage && posts.length > 0 && (
                   <span className="text-body-12 text-gray-40">마지막 글입니다</span>
                 )}
               </div>

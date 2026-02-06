@@ -26,6 +26,9 @@ const CATEGORY_OPTIONS = [
 ]
 
 const MAX_IMAGES = 5
+const TITLE_MAX_LENGTH = 100
+const CONTENT_MAX_LENGTH = 2000
+const PRICE_MAX_DIGITS = 12
 
 export default function PostFormPage() {
   const navigate = useNavigate()
@@ -69,7 +72,11 @@ export default function PostFormPage() {
     if (!postData) return
     setTitle(postData.title)
     setContent(postData.content ?? '')
-    setPrice(postData.price != null ? String(postData.price) : '')
+    setPrice(
+      postData.price != null
+        ? String(postData.price).replace(/\D/g, '').slice(0, PRICE_MAX_DIGITS)
+        : ''
+    )
     setStatus(postData.status)
     setCategory(postData.category ?? '')
     setImageUrls(postData.imageUrls ?? [])
@@ -111,26 +118,34 @@ export default function PostFormPage() {
     setError('')
     setFieldErrors({})
     const trimmedTitle = title.trim()
+    const trimmedContent = content.trim()
     const errs: { title?: string; content?: string; price?: string } = {}
     if (!trimmedTitle) errs.title = '제목을 적어주세요'
-    if (!content.trim()) errs.content = '설명을 적어주세요'
-    if (price.trim() === '' || (price.trim() !== '' && (Number.isNaN(Number(price)) || Number(price) < 0))) {
+    else if (trimmedTitle.length > TITLE_MAX_LENGTH) errs.title = `제목은 ${TITLE_MAX_LENGTH}자 이하여야 합니다.`
+    if (!trimmedContent) errs.content = '설명을 적어주세요'
+    else if (trimmedContent.length > CONTENT_MAX_LENGTH) errs.content = `설명은 ${CONTENT_MAX_LENGTH}자 이하여야 합니다.`
+    const priceStr = price.trim().replace(/\D/g, '')
+    if (price.trim() === '') {
+      errs.price = '가격을 적어주세요'
+    } else if (priceStr.length > PRICE_MAX_DIGITS || Number(priceStr) < 0) {
+      errs.price = `가격은 0원 이상, 최대 ${PRICE_MAX_DIGITS}자리까지 입력할 수 있습니다.`
+    } else if (Number.isNaN(Number(priceStr))) {
       errs.price = '가격을 적어주세요'
     }
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs)
       return
     }
-    const priceNum = price.trim() === '' ? null : parseInt(price, 10)
+    const priceNum = priceStr.length === 0 ? null : parseInt(priceStr, 10)
     const body: CreatePostBody = {
-      title: trimmedTitle,
-      content: content.trim() || null,
+      title: trimmedTitle.slice(0, TITLE_MAX_LENGTH),
+      content: trimmedContent ? trimmedContent.slice(0, CONTENT_MAX_LENGTH) : null,
       price: priceNum == null || Number.isNaN(priceNum) ? null : Math.max(0, priceNum),
       status,
       category: category.trim() || null,
       locationName: user?.locationName ?? null,
       locationCode: user?.locationCode ?? null,
-      imageUrls: imageUrls.length > 0 ? imageUrls : null,
+      imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
     }
     if (isEdit) {
       updateMutation.mutate(body, {
@@ -299,19 +314,25 @@ export default function PostFormPage() {
           )}
         </div>
         <div>
-          <label htmlFor="title" className="block text-body-14 font-medium text-gray-100 mb-1.5">
-            제목 *
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label htmlFor="title" className="block text-body-14 font-medium text-gray-100">
+              제목 *
+            </label>
+            <span className="text-body-12 text-gray-50" aria-live="polite">
+              {title.length}/{TITLE_MAX_LENGTH}
+            </span>
+          </div>
           <input
             id="title"
             type="text"
             value={title}
             onChange={(e) => {
-              setTitle(e.target.value)
+              const v = e.target.value
+              if (v.length <= TITLE_MAX_LENGTH) setTitle(v)
               if (fieldErrors.title) setFieldErrors((prev) => ({ ...prev, title: undefined }))
             }}
             placeholder="글 제목"
-            maxLength={100}
+            maxLength={TITLE_MAX_LENGTH}
             className={`${inputBase} ${fieldErrors.title ? inputError : inputNormal}`}
             required
             aria-required="true"
@@ -322,18 +343,25 @@ export default function PostFormPage() {
           )}
         </div>
         <div>
-          <label htmlFor="content" className="block text-body-14 font-medium text-gray-100 mb-1.5">
-            자세한 설명
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label htmlFor="content" className="block text-body-14 font-medium text-gray-100">
+              자세한 설명 *
+            </label>
+            <span className="text-body-12 text-gray-50" aria-live="polite">
+              {content.length}/{CONTENT_MAX_LENGTH}
+            </span>
+          </div>
           <textarea
             id="content"
             value={content}
             onChange={(e) => {
-              setContent(e.target.value)
+              const v = e.target.value
+              if (v.length <= CONTENT_MAX_LENGTH) setContent(v)
               if (fieldErrors.content) setFieldErrors((prev) => ({ ...prev, content: undefined }))
             }}
             placeholder="게시글 내용을 작성해 주세요."
             rows={5}
+            maxLength={CONTENT_MAX_LENGTH}
             className={`${textareaBase} ${fieldErrors.content ? textareaError : textareaNormal}`}
             aria-invalid={!!fieldErrors.content}
           />
@@ -342,19 +370,26 @@ export default function PostFormPage() {
           )}
         </div>
         <div>
-          <label htmlFor="price" className="block text-body-14 font-medium text-gray-100 mb-1.5">
-            가격 (원)
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label htmlFor="price" className="block text-body-14 font-medium text-gray-100">
+              가격 (원) *
+            </label>
+            <span className="text-body-12 text-gray-50" aria-live="polite">
+              {price.replace(/\D/g, '').length}/{PRICE_MAX_DIGITS}
+            </span>
+          </div>
           <input
             id="price"
-            type="number"
-            min={0}
+            type="text"
+            inputMode="numeric"
             value={price}
             onChange={(e) => {
-              setPrice(e.target.value)
+              const digits = e.target.value.replace(/\D/g, '').slice(0, PRICE_MAX_DIGITS)
+              setPrice(digits === '' ? '' : digits)
               if (fieldErrors.price) setFieldErrors((prev) => ({ ...prev, price: undefined }))
             }}
             placeholder="₩ 가격을 입력해주세요."
+            maxLength={PRICE_MAX_DIGITS}
             className={`${inputBase} ${fieldErrors.price ? inputError : inputNormal}`}
             aria-invalid={!!fieldErrors.price}
           />

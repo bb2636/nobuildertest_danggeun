@@ -19,6 +19,16 @@ export const authService = {
     locationName?: string;
     locationCode?: string;
   }): Promise<AuthResponse> {
+    if (!EMAIL_REGEX.test(params.email)) {
+      const error = new Error('올바른 이메일 형식이 아닙니다.');
+      (error as Error & { statusCode?: number }).statusCode = 400;
+      throw error;
+    }
+    if (params.password.length < MIN_PASSWORD_LENGTH) {
+      const error = new Error('비밀번호는 6자 이상이어야 합니다.');
+      (error as Error & { statusCode?: number }).statusCode = 400;
+      throw error;
+    }
     const existing = await userRepository.findByEmail(params.email);
     if (existing) {
       const error = new Error('이미 사용 중인 이메일입니다.');

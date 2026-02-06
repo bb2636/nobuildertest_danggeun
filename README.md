@@ -105,12 +105,24 @@ npm run dev
 
 ### Android 앱 빌드·실행
 
+**방법 1 – frontend 폴더에서 (권장)**
+
 ```bash
 cd frontend
 npm run build          # 웹 빌드 (dist 생성)
-npx cap sync           # dist 내용을 android/assets로 복사
+npx cap sync android   # dist → android/assets 복사
 npx cap open android   # Android Studio에서 열기
 ```
+
+**방법 2 – 루트(step2)에서**
+
+```bash
+npm run build --prefix frontend
+npm run cap:sync --prefix frontend
+cd frontend && npx cap open android
+```
+
+> ⚠️ `npx cap sync`는 **frontend**에 Capacitor가 설치되어 있으므로, 루트에서 실행하면 `npm run cap:sync --prefix frontend`처럼 **반드시 frontend 기준**으로 실행하세요.
 
 Android Studio에서 **Run**으로 에뮬레이터 또는 실기기에서 실행합니다.
 
@@ -121,7 +133,10 @@ Android Studio에서 **Run**으로 에뮬레이터 또는 실기기에서 실행
 - **에뮬레이터**: `http://10.0.2.2:3001` (Android 에뮬레이터의 localhost)
 - **실기기**: PC와 같은 Wi‑Fi의 IP 사용 (예: `http://192.168.0.10:3001`)
 
-설정 후 `npx cap sync` 한 번 더 실행한 뒤 앱을 다시 빌드하세요.
+설정 후 `npx cap sync android`(또는 `npm run cap:sync --prefix frontend`) 한 번 더 실행한 뒤 앱을 다시 빌드하세요.
+
+**앱에서 API 연결:**  
+API 요청 주소는 `frontend/.env`의 `VITE_API_URL`로 빌드 시 들어갑니다. 에뮬레이터는 `VITE_API_URL=http://10.0.2.2:3001`, 실기기는 같은 Wi‑Fi의 PC IP(예: `http://192.168.0.10:3001`)로 설정한 뒤 `npm run build` → `cap sync` 후 앱을 다시 실행하세요.
 
 ### 프론트엔드 Capacitor 스크립트
 

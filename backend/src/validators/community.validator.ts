@@ -21,7 +21,11 @@ export const createCommunityPostValidator = [
     .withMessage('제목은 필수입니다.')
     .isLength({ max: 200 })
     .withMessage('제목은 200자 이하여야 합니다.'),
-  body('content').optional().trim(),
+  body('content')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('내용은 2000자 이하여야 합니다.'),
   body('topic').optional().trim().isLength({ max: 50 }),
   body('locationName').optional().trim().isLength({ max: 100 }),
   body('locationCode').optional().trim().isLength({ max: 20 }),
@@ -30,7 +34,7 @@ export const createCommunityPostValidator = [
 export const updateCommunityPostValidator = [
   param('id').isInt({ min: 1 }).withMessage('올바른 게시글 ID가 아닙니다.'),
   body('title').optional().trim().isLength({ max: 200 }),
-  body('content').optional().trim(),
+  body('content').optional().trim().isLength({ max: 2000 }),
   body('topic').optional().trim().isLength({ max: 50 }),
 ];
 

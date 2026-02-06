@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, ChevronRight } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { communityApi } from '../api/community'
@@ -9,8 +10,12 @@ import NoticeBox from '../components/NoticeBox'
 import FieldErrorTooltip from '../components/FieldErrorTooltip'
 import { getApiErrorMessage } from '../utils/apiError'
 
+const TITLE_MAX_LENGTH = 200
+const CONTENT_MAX_LENGTH = 2000
+
 export default function CommunityPostFormPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { id } = useParams<{ id: string }>()
   const { user } = useAuth()
   const isEdit = Boolean(id)
@@ -60,8 +65,17 @@ export default function CommunityPostFormPage() {
     setError('')
     setFieldErrors({})
     const trimmedTitle = title.trim()
+    const trimmedContent = content.trim()
     if (!trimmedTitle) {
       setFieldErrors({ title: '제목을 입력해주세요.' })
+      return
+    }
+    if (trimmedTitle.length > TITLE_MAX_LENGTH) {
+      setFieldErrors({ title: `제목은 ${TITLE_MAX_LENGTH}자 이하여야 합니다.` })
+      return
+    }
+    if (trimmedContent.length > CONTENT_MAX_LENGTH) {
+      setError(`내용은 ${CONTENT_MAX_LENGTH}자 이하여야 합니다.`)
       return
     }
     setLoading(true)
@@ -69,18 +83,20 @@ export default function CommunityPostFormPage() {
       if (isEdit) {
         await communityApi.update(postId, {
           title: trimmedTitle,
-          content: content.trim() || null,
+          content: trimmedContent || null,
           topic: topic.trim() || null,
         })
+        queryClient.invalidateQueries({ queryKey: ['community'] })
         navigate(`/community/${postId}`, { replace: true })
       } else {
         const { data } = await communityApi.create({
           title: trimmedTitle,
-          content: content.trim() || null,
+          content: trimmedContent || null,
           topic: topic.trim() || null,
           locationName: user?.locationName ?? null,
           locationCode: user?.locationCode ?? null,
         })
+        queryClient.invalidateQueries({ queryKey: ['community'] })
         navigate(`/community/${data.id}`, { replace: true })
       }
     } catch (err: unknown) {
@@ -175,19 +191,25 @@ export default function CommunityPostFormPage() {
           </button>
         </div>
         <div>
-          <label htmlFor="community-title" className="block text-body-14 font-medium text-gray-100 mb-1.5">
-            제목 *
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label htmlFor="community-title" className="block text-body-14 font-medium text-gray-100">
+              제목 *
+            </label>
+            <span className="text-body-12 text-gray-50" aria-live="polite">
+              {title.length}/{TITLE_MAX_LENGTH}
+            </span>
+          </div>
           <input
             id="community-title"
             type="text"
             value={title}
             onChange={(e) => {
-              setTitle(e.target.value)
+              const v = e.target.value
+              if (v.length <= TITLE_MAX_LENGTH) setTitle(v)
               if (fieldErrors.title) setFieldErrors((prev) => ({ ...prev, title: undefined }))
             }}
             placeholder="제목을 입력하세요"
-            maxLength={200}
+            maxLength={TITLE_MAX_LENGTH}
             className={`w-full h-12 px-4 rounded-lg border text-body-16 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-point-0 ${
               fieldErrors.title ? 'border-2 border-error focus:ring-error' : 'border-gray-20 focus:ring-point-0'
             }`}
@@ -199,15 +221,24 @@ export default function CommunityPostFormPage() {
           )}
         </div>
         <div>
-          <label htmlFor="community-content" className="block text-body-14 font-medium text-gray-100 mb-1.5">
-            내용
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label htmlFor="community-content" className="block text-body-14 font-medium text-gray-100">
+              내용
+            </label>
+            <span className="text-body-12 text-gray-50" aria-live="polite">
+              {content.length}/{CONTENT_MAX_LENGTH}
+            </span>
+          </div>
           <textarea
             id="community-content"
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value
+              if (v.length <= CONTENT_MAX_LENGTH) setContent(v)
+            }}
             placeholder="동네 이웃에게 하고 싶은 말을 적어보세요"
             rows={8}
+            maxLength={CONTENT_MAX_LENGTH}
             className="w-full px-4 py-3 rounded-lg border border-gray-20 text-body-16 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-point-0 resize-none"
           />
         </div>
