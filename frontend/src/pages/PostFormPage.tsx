@@ -396,26 +396,28 @@ export default function PostFormPage() {
             </ul>
           )}
         </div>
-        <div>
-          <label className="block text-body-14 font-medium text-gray-100 mb-1.5">
-            상태
-          </label>
-          <div className="flex gap-2">
-            {STATUS_OPTIONS.map((opt) => (
-              <label key={opt.value} className="flex items-center gap-1.5 cursor-pointer">
-                <input
-                  type="radio"
-                  name="status"
-                  value={opt.value}
-                  checked={status === opt.value}
-                  onChange={() => setStatus(opt.value)}
-                  className="w-4 h-4 text-point-0 border-gray-20"
-                />
-                <span className="text-body-14 text-gray-100">{opt.label}</span>
-              </label>
-            ))}
+        {isEdit && (
+          <div>
+            <label className="block text-body-14 font-medium text-gray-100 mb-1.5">
+              상태
+            </label>
+            <div className="flex gap-2">
+              {STATUS_OPTIONS.map((opt) => (
+                <label key={opt.value} className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="status"
+                    value={opt.value}
+                    checked={status === opt.value}
+                    onChange={() => setStatus(opt.value)}
+                    className="w-4 h-4 text-point-0 border-gray-20"
+                  />
+                  <span className="text-body-14 text-gray-100">{opt.label}</span>
+                </label>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
         {error && (
           <FieldErrorTooltip message={error} />
         )}

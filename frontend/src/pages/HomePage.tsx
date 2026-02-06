@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState, useRef } from 'react'
+import { type ReactNode, useEffect, useMemo, useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query'
 import { Carrot, MapPin, User, MessageCircle, Heart } from 'lucide-react'
@@ -66,7 +66,14 @@ export default function HomePage() {
       lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
   })
 
-  const posts: PostListItem[] = data?.pages.flatMap((p) => p.posts) ?? []
+  const rawPosts: PostListItem[] = data?.pages.flatMap((p) => p.posts) ?? []
+  // 무한 스크롤/페이지네이션에서 같은 게시글이 중복으로 섞일 수 있어 key 경고가 발생함.
+  // 렌더링 전 id 기준으로 중복 제거해 React key를 안정화한다.
+  const posts: PostListItem[] = useMemo(() => {
+    const map = new Map<number, PostListItem>()
+    for (const p of rawPosts) map.set(p.id, p)
+    return Array.from(map.values())
+  }, [rawPosts])
   const error = isListError ? '게시글 목록을 불러오지 못했습니다.' : ''
 
   useEffect(() => {
