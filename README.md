@@ -1,6 +1,52 @@
 # 당근마켓 클론 (Danggeun Clone)
 
 피그마 디자인을 기반으로 한 중고거래 풀스택 클론 프로젝트입니다.
+<details>
+  <summary>📸 스크린샷 상세보기 (클릭하여 펼치기)</summary>
+  <br />
+  <table align="center">
+    <tr>
+      <td align="center"><a href="https://github.com/user-attachments/assets/7946b5a8-5ca7-4dae-b63f-3848bb08f18c"><img src="https://github.com/user-attachments/assets/7946b5a8-5ca7-4dae-b63f-3848bb08f18c" width="200" /></a></td>
+      <td align="center"><a href="https://github.com/user-attachments/assets/a3ac535a-ebef-4754-8b54-f146995e160f"><img src="https://github.com/user-attachments/assets/a3ac535a-ebef-4754-8b54-f146995e160f" width="200" /></a></td>
+      <td align="center"><a href="https://github.com/user-attachments/assets/965126e7-d71b-4464-b5c2-d3e13888b0bf"><img src="https://github.com/user-attachments/assets/965126e7-d71b-4464-b5c2-d3e13888b0bf" width="200" /></a></td>
+    </tr>
+    <tr>
+      <td align="center"><a href="https://github.com/user-attachments/assets/252926fe-6b94-420c-a58e-e912002f48b1"><img src="https://github.com/user-attachments/assets/252926fe-6b94-420c-a58e-e912002f48b1" width="200" /></a></td>
+      <td align="center"><a href="https://github.com/user-attachments/assets/5f0bef25-0b62-47af-a190-6c35f5c2df1e"><img src="https://github.com/user-attachments/assets/5f0bef25-0b62-47af-a190-6c35f5c2df1e" width="200" /></a></td>
+      <td align="center"><a href="https://github.com/user-attachments/assets/b557baed-f3ad-41c1-8fe6-ad8b9fe88532"><img src="https://github.com/user-attachments/assets/b557baed-f3ad-41c1-8fe6-ad8b9fe88532" width="200" /></a></td>
+    </tr>
+    <tr>
+      <td align="center"><a href="https://github.com/user-attachments/assets/d05612ff-adc8-4328-9a6b-2364168dfecd"><img src="https://github.com/user-attachments/assets/d05612ff-adc8-4328-9a6b-2364168dfecd" width="200" /></a></td>
+      <td align="center"><a href="https://github.com/user-attachments/assets/80bb377e-f363-4c21-aa37-71c49220ff75"><img src="https://github.com/user-attachments/assets/80bb377e-f363-4c21-aa37-71c49220ff75" width="200" /></a></td>
+      <td align="center"><a href="https://github.com/user-attachments/assets/4d19ad4b-2a3b-4167-a9e8-70a8fd4efc42"><img src="https://github.com/user-attachments/assets/4d19ad4b-2a3b-4167-a9e8-70a8fd4efc42" width="200" /></a></td>
+    </tr>
+    <tr>
+      <td align="center"><a href="https://github.com/user-attachments/assets/6c48f640-2625-4a00-a803-4c08a93b0e2a"><img src="https://github.com/user-attachments/assets/6c48f640-2625-4a00-a803-4c08a93b0e2a" width="200" /></a></td>
+      <td align="center"><a href="https://github.com/user-attachments/assets/8ada3325-8171-47e3-ab48-90b718a053ee"><img src="https://github.com/user-attachments/assets/8ada3325-8171-47e3-ab48-90b718a053ee" width="200" /></a></td>
+      <td align="center"><a href="https://github.com/user-attachments/assets/52c43ed7-22e8-4369-be8f-2522bd3d29f5"><img src="https://github.com/user-attachments/assets/52c43ed7-22e8-4369-be8f-2522bd3d29f5" width="200" /></a></td>
+    </tr>
+    <tr>
+      <td align="center"><a href="https://github.com/user-attachments/assets/aeb62394-008a-4ec8-8260-20d2403d7b6a"><img src="https://github.com/user-attachments/assets/aeb62394-008a-4ec8-8260-20d2403d7b6a" width="200" /></a></td>
+      <td align="center"><a href="https://github.com/user-attachments/assets/6b44fa66-8035-4965-894f-9d928c7fb709"><img src="https://github.com/user-attachments/assets/6b44fa66-8035-4965-894f-9d928c7fb709" width="200" /></a></td>
+      <td align="center"><a href="https://github.com/user-attachments/assets/1194988d-be38-44d0-8e85-c763f27ce0ec"><img src="https://github.com/user-attachments/assets/1194988d-be38-44d0-8e85-c763f27ce0ec" width="200" /></a></td>
+    </tr>
+    <tr>
+      <td align="center"><a href="https://github.com/user-attachments/assets/4b070e80-6d28-4ba3-94bc-023364f644c2"><img src="https://github.com/user-attachments/assets/4b070e80-6d28-4ba3-94bc-023364f644c2" width="200" /></a></td>
+      <td align="center"><a href="https://github.com/user-attachments/assets/66c341c2-4cbb-45f7-a2d7-e25d9e6ec32d"><img src="https://github.com/user-attachments/assets/66c341c2-4cbb-45f7-a2d7-e25d9e6ec32d" width="200" /></a></td>
+      <td align="center"><a href="https://github.com/user-attachments/assets/08eea867-7d1e-43e5-b325-f37afd01a13f"><img src="https://github.com/user-attachments/assets/08eea867-7d1e-43e5-b325-f37afd01a13f" width="200" /></a></td>
+    </tr>
+    <tr>
+      <td align="center"><a href="https://github.com/user-attachments/assets/4bb35121-a980-47b0-a1ed-f0094a43d105"><img src="https://github.com/user-attachments/assets/4bb35121-a980-47b0-a1ed-f0094a43d105" width="200" /></a></td>
+      <td align="center"><a href="https://github.com/user-attachments/assets/45ca79db-2305-4b9b-9d15-0949414d6f3d"><img src="https://github.com/user-attachments/assets/45ca79db-2305-4b9b-9d15-0949414d6f3d" width="200" /></a></td>
+      <td align="center"><a href="https://github.com/user-attachments/assets/a2d7723b-b548-4075-b135-891d34342ab5"><img src="https://github.com/user-attachments/assets/a2d7723b-b548-4075-b135-891d34342ab5" width="200" /></a></td>
+    </tr>
+    <tr>
+      <td align="center"><a href="https://github.com/user-attachments/assets/14775390-290e-4d2d-8482-0ded3ac513d3"><img src="https://github.com/user-attachments/assets/14775390-290e-4d2d-8482-0ded3ac513d3" width="200" /></a></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </table>
+</details>
 
 ## 기술 스택
 
@@ -270,3 +316,7 @@ Android Studio에서 **Run**으로 에뮬레이터 또는 실기기에서 실행
 | Android 빌드 | `frontend/android/build.gradle` | 서브프로젝트 Java 17 통일 |
 | Android 네트워크 | `frontend/android/.../network_security_config.xml`, `AndroidManifest.xml` | HTTP(cleartext) 허용 도메인, `usesCleartextTraffic` |
 | Android WebView | `frontend/android/.../MainActivity.java` | `MIXED_CONTENT_ALWAYS_ALLOW` 적용 |
+
+
+
+
